@@ -8,7 +8,7 @@ import com.hbbank.backend.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/transactions")
+@RequestMapping("/api/transaction")
 @RequiredArgsConstructor
 public class TransactionController {
     private final TransactionService transactionService;

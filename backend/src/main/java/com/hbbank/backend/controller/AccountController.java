@@ -8,7 +8,7 @@ import com.hbbank.backend.service.AccountService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/account")
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
