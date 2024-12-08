@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { Account } from "../../types/account";
 
-const TransferButton = () => {
+const TransferButton = ({ account }: { account: Account }) => {
     const navigate = useNavigate();
 
     return (

@@ -1,23 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import http from "../api/http";
+import AccountItem from '../components/account/AccountItem';
+import { Account } from "../types/account";
 
 const AccountList = () => {
     const navigate = useNavigate();
     const user = sessionStorage.getItem('user');
+    const [accounts, setAccounts] = useState<Account[]>([]);
+
     useEffect(() => {
         getAccounts(user ? JSON.parse(user).id : 0);
     }, []);
-
-    interface Account {
-        id: number,
-        accountName: string,
-        accountNumber: string,
-        balance: number,
-        interestRate: number,
-    }
-
-    const [accounts, setAccounts] = useState<Account[]>([]);
 
     const getAccounts = async (userId: number) => {
         try {
@@ -34,14 +28,20 @@ const AccountList = () => {
     }
 
     return (
-        <div>
-            <h1>환영합니다.</h1>
-            <ul>
+        <>
+            <h1 className="text-2xl font-bold mb-4">계좌 목록</h1>
+            <div className="space-y-4">
                 {accounts.map((account) => (
-                    <li key={account.id}>{account.accountName}</li>
+                    <button
+                        className="w-full"
+                        key={account.id}
+                        onClick={() => { navigate(`/account/${account.id}`) }}
+                    >
+                        <AccountItem account={account} />
+                    </button>
                 ))}
-            </ul>
-        </div>
+            </div>
+        </>
     );
 };
 

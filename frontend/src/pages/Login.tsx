@@ -1,13 +1,12 @@
 import { useState } from "react";
-import http from "../api/http";
 import { useNavigate } from "react-router-dom";
+import http from "../api/http";
+import LoginForm from "../components/forms/LoginForm";
+import { UserLoginDTO } from "../types/user";
+import { UserResponseDTO } from "../types/user";
 
-const SignIn = () => {
-    interface LoginForm {
-        username: string;
-        password: string;
-    }
-    const [formData, setFormData] = useState<LoginForm>({
+const Login = () => {
+    const [formData, setFormData] = useState<UserLoginDTO>({
         username: '',
         password: ''
     });
@@ -23,7 +22,7 @@ const SignIn = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await http.post('/user/login', formData);
+            const response = await http.post<UserResponseDTO>('/user/login', formData);
             sessionStorage.setItem('accessToken', response.data.accessToken);
             sessionStorage.setItem('user', JSON.stringify({
                 id: response.data.id,
@@ -37,12 +36,7 @@ const SignIn = () => {
             console.error(error);
             alert('로그인 실패!');
         }
-    }
-
-    const inputFields = [
-        { name: 'username', type: 'text', placeholder: '아이디를 입력하세요' },
-        { name: 'password', type: 'password', placeholder: '비밀번호를 입력하세요' }
-    ];
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
@@ -53,31 +47,15 @@ const SignIn = () => {
                             로그인
                         </span>
                     </h2>
-                    <div className="space-y-6">
-                        {inputFields.map((field) => (
-                            <div key={field.name} className="space-y-2">
-                                <input
-                                    type={field.type}
-                                    name={field.name}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200"
-                                    placeholder={field.placeholder}
-                                    value={formData[field.name as keyof typeof formData]}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        ))}
-                        <button
-                            type="submit"
-                            className="w-full py-4 px-4 mt-8 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-lg font-bold rounded-lg shadow-md hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-1 transition duration-200"
-                            onClick={handleLogin}
-                        >
-                            로그인하기
-                        </button>
-                    </div>
+                    <LoginForm 
+                        formData={formData}
+                        onSubmit={handleLogin}
+                        onChange={handleChange}
+                    />
                 </div>
             </div>
         </div>
     );
 };
 
-export default SignIn;
+export default Login;

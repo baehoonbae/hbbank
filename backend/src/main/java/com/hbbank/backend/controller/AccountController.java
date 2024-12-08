@@ -71,4 +71,15 @@ public class AccountController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    // 특정 계좌 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getAccount(@PathVariable Long id) {
+        Optional<Account> opAccount = accountService.findById(id);
+        if (opAccount.isPresent() && !opAccount.isEmpty()) {
+            AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());
+            return ResponseEntity.ok(accountDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
 }

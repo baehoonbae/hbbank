@@ -57,4 +57,8 @@ public class AccountService {
     public Optional<List<Account>> findAllByUser_Id(Long userId) {
         return accountRepository.findAllByUser_Id(userId);
     }
+
+    public Optional<Account> findById(Long id) {
+        return accountRepository.findById(id);
+    }
 }

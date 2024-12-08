@@ -8,6 +8,7 @@ import SignUp from '../pages/SignUp';
 import Transaction from '../pages/Transaction';
 import Transfer from '../pages/Transfer';
 import CreateAccount from '../pages/CreateAccount';
+import AccountDetail from '../pages/AccountDetail';
 
 export const routes: RouteObject[] = [
     {
@@ -37,5 +38,9 @@ export const routes: RouteObject[] = [
     {
         path: 'create-account',
         element: <CreateAccount />
+    },
+    {
+        path: '/account/:id',
+        element: <AccountDetail />
     }
 ]; 
