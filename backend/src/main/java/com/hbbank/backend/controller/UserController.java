@@ -1,5 +1,6 @@
 package com.hbbank.backend.controller;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
@@ -33,20 +34,17 @@ public class UserController {
     private final UserService userService;
     private final TokenService tokenService;
     private final JwtUtil jwtUtil;
-    
+
     // 회원가입
     @PostMapping("/regist")
     public ResponseEntity<?> regist(@RequestBody User user) {
-        try {
-            boolean success = userService.regist(user);
-            if (success) {
-                return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 완료되었습니다.");
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원가입에 실패하였습니다.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류가 발생했습니다.");
+        User registeredUser = userService.regist(user);
+        if (registeredUser != null) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "회원가입이 완료되었습니다."));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "회원가입에 실패했습니다."));
         }
     }
 
@@ -67,7 +65,7 @@ public class UserController {
                                 .path("/") // 모든 경로에서 접근 가능
                                 .maxAge(60 * 60 * 24 * 14) // 2주
                                 .sameSite("None") // https 필수
-                                .domain("fqdashboard.duckdns.org") // 도메인 설정
+                                // .domain("fqdashboard.duckdns.org") // 도메인 설정(생기면 주석 해제)
                                 .build();
 
                         return ResponseEntity.ok()
@@ -115,14 +113,26 @@ public class UserController {
     // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String bearerToken) {
+        log.info("bearerToken: {}", bearerToken);
         try {
             String token = bearerToken.substring(7); // "Bearer " 제거
             Long userId = jwtUtil.getUserId(token);
             tokenService.revokeRefreshToken(userId);
-            return ResponseEntity.ok().body("로그아웃 성공");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("로그아웃 실패");
+            log.warn("Invalid token during logout: {}", e.getMessage());
         }
+
+        ResponseCookie clear = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                // .domain("fqdashboard.duckdns.org")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clear.toString())
+                .body("로그아웃 성공");
     }
 }

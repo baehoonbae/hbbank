@@ -74,9 +74,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return Arrays.asList(
             "/api/user/login",
             "/api/user/regist",
-            "/api/user/check-email",
             "/api/user/check-refresh-token",
-            "/api/user/refresh"
+            "/api/user/refresh",
+            "/api/user/logout"
         ).contains(requestURI);
     }
 } 

@@ -19,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
     private final UserRepository userRepository;
 
-    public boolean regist(User user) {
-        return userRepository.save(user) != null;
+    public User regist(User user) {
+        return userRepository.save(user);
     }
 
     public Optional<User> login(LoginRequest loginRequest) {
