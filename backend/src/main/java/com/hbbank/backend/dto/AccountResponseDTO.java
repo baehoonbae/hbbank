@@ -15,14 +15,14 @@ public class AccountResponseDTO {
     private String accountNumber;
     private BigDecimal balance;
     private Double interestRate;
-    
+
     public static AccountResponseDTO from(Account account) {
         return AccountResponseDTO.builder()
-            .id(account.getId())
-            .accountName(account.getAccountType().getName())
-            .accountNumber(account.getAccountNumber())
-            .balance(account.getBalance())
-            .interestRate(account.getAccountType().getInterestRate())
-            .build();
+                .id(account.getId())
+                .accountName(account.getAccountType().getName())
+                .accountNumber(account.getAccountNumber())
+                .balance(account.getBalance())
+                .interestRate(account.getAccountType().getInterestRate())
+                .build();
     }
 }
