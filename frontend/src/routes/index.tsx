@@ -4,9 +4,10 @@ import { RouteObject } from 'react-router-dom';
 import AccountList from '../pages/AccountList';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
-import Transaction from '../pages/Transaction';
 import SignUp from '../pages/SignUp';
+import Transaction from '../pages/Transaction';
 import Transfer from '../pages/Transfer';
+import CreateAccount from '../pages/CreateAccount';
 
 export const routes: RouteObject[] = [
     {
@@ -32,5 +33,9 @@ export const routes: RouteObject[] = [
     {
         path: '/transaction',
         element: <Transaction />
+    },
+    {
+        path: 'create-account',
+        element: <CreateAccount />
     }
 ]; 

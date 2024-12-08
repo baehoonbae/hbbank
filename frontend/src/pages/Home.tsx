@@ -5,6 +5,7 @@ import LogoutButton from "../components/buttons/LogoutButton";
 import SignUpButton from "../components/buttons/SignUpButton";
 import TransferButton from "../components/buttons/TransferButton";
 import TransactionButton from "../components/buttons/TransactionButton";
+import CreateAccountButton from "../components/buttons/CreateAccountButton";
 
 const Home = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,6 +35,7 @@ const Home = () => {
                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
                         <TransferButton />
                         <AccountListButton />
+                        <CreateAccountButton />
                         <TransactionButton />
                         <LogoutButton />
                     </div>

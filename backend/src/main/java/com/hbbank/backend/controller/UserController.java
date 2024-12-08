@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -14,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hbbank.backend.domain.User;
+import com.hbbank.backend.dto.LoginRequestDTO;
+import com.hbbank.backend.dto.LoginResponseDTO;
+import com.hbbank.backend.dto.RefreshTokenDTO;
+import com.hbbank.backend.dto.TokenResponseDTO;
 import com.hbbank.backend.exception.InvalidTokenException;
-import com.hbbank.backend.request.LoginRequest;
-import com.hbbank.backend.request.RefreshTokenRequest;
-import com.hbbank.backend.response.LoginResponse;
-import com.hbbank.backend.response.TokenResponse;
 import com.hbbank.backend.service.TokenService;
 import com.hbbank.backend.service.UserService;
 import com.hbbank.backend.util.JwtUtil;
@@ -50,13 +51,13 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest) {
         log.info("loginRequest: {}", loginRequest);
         try {
             Optional<User> opUser = userService.login(loginRequest);
             return opUser
                     .map(user -> {
-                        TokenResponse tokens = tokenService.createTokens(user.getId());
+                        TokenResponseDTO tokens = tokenService.createTokens(user.getId());
 
                         ResponseCookie refreshTokenCookie = ResponseCookie
                                 .from("refreshToken", tokens.getRefreshToken())
@@ -70,7 +71,7 @@ public class UserController {
 
                         return ResponseEntity.ok()
                                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                                .body(new LoginResponse(
+                                .body(new LoginResponseDTO(
                                         tokens.getAccessToken(),
                                         user.getId(),
                                         user.getUsername(),
@@ -79,17 +80,17 @@ public class UserController {
                     })
                     .orElse(ResponseEntity
                             .status(HttpStatus.UNAUTHORIZED)
-                            .body(new LoginResponse(null, null, null, null, "로그인 실패")));
+                            .body(new LoginResponseDTO(null, null, null, null, "로그인 실패")));
         } catch (Exception e) {
             log.error("Login error: ", e); // 상세 로그 추가
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new LoginResponse(null, null, null, null, "서버 오류"));
+                    .body(new LoginResponseDTO(null, null, null, null, "서버 오류"));
         }
     }
 
     // 토큰 갱신
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenDTO request) {
         try {
             if (request.getRefreshToken() == null || request.getRefreshToken().isEmpty()) {
                 return ResponseEntity
@@ -97,7 +98,7 @@ public class UserController {
                         .body("리프레시 토큰이 필요합니다.");
             }
 
-            TokenResponse tokens = tokenService.refreshAccessToken(request.getRefreshToken());
+            TokenResponseDTO tokens = tokenService.refreshAccessToken(request.getRefreshToken());
             return ResponseEntity.ok(tokens);
         } catch (InvalidTokenException e) {
             return ResponseEntity

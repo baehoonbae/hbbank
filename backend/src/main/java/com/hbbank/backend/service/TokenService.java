@@ -7,9 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hbbank.backend.domain.RefreshToken;
 import com.hbbank.backend.domain.User;
+import com.hbbank.backend.dto.TokenResponseDTO;
 import com.hbbank.backend.exception.InvalidTokenException;
 import com.hbbank.backend.repository.RefreshTokenRepository;
-import com.hbbank.backend.response.TokenResponse;
 import com.hbbank.backend.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class TokenService {
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 
-	public TokenResponse createTokens(Long userId) {
+	public TokenResponseDTO createTokens(Long userId) {
 		String accessToken = jwtUtil.createAccessToken(userId);
 		String refreshToken = jwtUtil.createRefreshToken(userId);
 
@@ -32,7 +32,7 @@ public class TokenService {
 		log.debug("refreshToken: {}", refreshToken);
 
 		saveOrUpdateRefreshToken(userId, refreshToken);
-		return new TokenResponse(accessToken, refreshToken);
+		return new TokenResponseDTO(accessToken, refreshToken);
 	}
 
 	private void saveOrUpdateRefreshToken(Long userId, String refreshToken) {
@@ -52,12 +52,12 @@ public class TokenService {
 		}
 	}
 
-	public TokenResponse refreshAccessToken(String refreshToken) {
+	public TokenResponseDTO refreshAccessToken(String refreshToken) {
 		validateRefreshTokenOrThrow(refreshToken);
 		Long userId = jwtUtil.getUserId(refreshToken);
 		String newAccessToken = jwtUtil.createAccessToken(userId);
 
-		return new TokenResponse(newAccessToken, refreshToken);
+		return new TokenResponseDTO(newAccessToken, refreshToken);
 	}
 
 	private void validateRefreshTokenOrThrow(String refreshToken) {

@@ -1,11 +1,13 @@
-package com.hbbank.backend.response;
+package com.hbbank.backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @AllArgsConstructor
-public class LoginResponse {
+public class LoginResponseDTO {
     private String accessToken;
     private Long id;
     private String username;
