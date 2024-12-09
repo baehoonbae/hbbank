@@ -1,6 +1,6 @@
 export interface UserSignUpDTO {
     name: string;
-    birthDate: string;
+    birth: string;
     username: string;
     password: string;
     address: string;

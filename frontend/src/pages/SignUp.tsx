@@ -8,7 +8,7 @@ const SignUp = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState<UserSignUpDTO>({
         name: '',
-        birthDate: '',
+        birth: new Date().toISOString().split('T')[0],
         username: '',
         password: '',
         address: '',
@@ -26,6 +26,7 @@ const SignUp = () => {
 
     const handleRegist = async () => {
         try {
+            console.log(user);
             const response = await http.post('/user/regist', user);
             alert(response.data.message);
             navigate('/');

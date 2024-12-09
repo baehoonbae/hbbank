@@ -1,5 +1,6 @@
 package com.hbbank.backend.service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.LoginRequestDTO;
+import com.hbbank.backend.dto.UserRegistDTO;
 import com.hbbank.backend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public User regist(User user) {
+    public User regist(UserRegistDTO user) {
+        log.info(user.getBirth().toString());
         User user2 = User.builder()
                 .address(user.getAddress())
                 .birth(user.getBirth())
@@ -43,9 +46,9 @@ public class UserService {
             return Optional.empty();
         }
         User user = opUser.get();
-        if(passwordEncoder.matches(password, user.getPassword())){
+        if (passwordEncoder.matches(password, user.getPassword())) {
             return opUser;
-        }else{
+        } else {
             return Optional.empty();
         }
     }

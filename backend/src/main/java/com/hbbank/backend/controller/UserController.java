@@ -18,11 +18,13 @@ import com.hbbank.backend.dto.LoginRequestDTO;
 import com.hbbank.backend.dto.LoginResponseDTO;
 import com.hbbank.backend.dto.RefreshTokenDTO;
 import com.hbbank.backend.dto.TokenResponseDTO;
+import com.hbbank.backend.dto.UserRegistDTO;
 import com.hbbank.backend.exception.InvalidTokenException;
 import com.hbbank.backend.service.TokenService;
 import com.hbbank.backend.service.UserService;
 import com.hbbank.backend.util.JwtUtil;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,8 +39,8 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/regist")
-    public ResponseEntity<?> regist(@RequestBody User user) {
-        User registeredUser = userService.regist(user);
+    public ResponseEntity<?> regist(@Valid @RequestBody UserRegistDTO dto) {       
+        User registeredUser = userService.regist(dto);
         if (registeredUser != null) {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "회원가입이 완료되었습니다."));
@@ -50,7 +52,7 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         log.info("loginRequest: {}", loginRequest);
         try {
             Optional<User> opUser = userService.login(loginRequest);

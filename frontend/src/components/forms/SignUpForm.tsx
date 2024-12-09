@@ -9,7 +9,7 @@ interface SignUpFormProps {
 const SignUpForm = ({ formData, onChange, onSubmit }: SignUpFormProps) => {
     const inputFields = [
         { name: 'name', type: 'text', placeholder: '이름을 입력하세요' },
-        { name: 'birthDate', type: 'date' },
+        { name: 'birth', type: 'date' },
         { name: 'username', type: 'text', placeholder: '아이디를 입력하세요' },
         { name: 'password', type: 'password', placeholder: '비밀번호를 입력하세요' },
         { name: 'address', type: 'text', placeholder: '주소를 입력하세요' },
