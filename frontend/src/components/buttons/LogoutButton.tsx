@@ -1,24 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import http from "../../api/http";
+import { handleLogout } from "../../api/http";
 
 const LogoutButton = () => {
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        try {
-            const accessToken = sessionStorage.getItem('accessToken');
-            await http.post('/user/logout', null, {
-                headers: {Authorization: `Bearer ${accessToken}`}
-            });
-            sessionStorage.removeItem('accessToken');
-            sessionStorage.removeItem('user');
-            window.dispatchEvent(new Event('storage'));
-            navigate('/');
-        } catch (error) {
-            console.error('로그아웃 실패:', error);
-        }
-    }
-
     return (
         <div>
             <button

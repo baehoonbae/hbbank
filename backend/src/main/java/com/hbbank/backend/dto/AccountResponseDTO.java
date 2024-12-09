@@ -10,11 +10,11 @@ import lombok.Getter;
 @Getter
 @Builder
 public class AccountResponseDTO {
-    private Long id;
-    private String accountName;
-    private String accountNumber;
-    private BigDecimal balance;
-    private Double interestRate;
+    private final Long id;
+    private final String accountName;
+    private final String accountNumber;
+    private final BigDecimal balance;
+    private final Double interestRate;
 
     public static AccountResponseDTO from(Account account) {
         return AccountResponseDTO.builder()
