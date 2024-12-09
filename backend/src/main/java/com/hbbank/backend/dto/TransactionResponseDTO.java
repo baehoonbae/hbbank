@@ -3,7 +3,6 @@ package com.hbbank.backend.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.Transaction;
 
 import lombok.Builder;

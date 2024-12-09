@@ -20,9 +20,18 @@ public class AccountResponseDTO {
         return AccountResponseDTO.builder()
                 .id(account.getId())
                 .accountName(account.getAccountType().getName())
-                .accountNumber(account.getAccountNumber())
+                .accountNumber(formatAccountNumber(account.getAccountNumber()))
                 .balance(account.getBalance())
                 .interestRate(account.getAccountType().getInterestRate())
                 .build();
+    }
+
+    private static String formatAccountNumber(String number) {
+        return String.format("%s-%s-%s-%s-%s",
+            number.substring(0, 3),
+            number.substring(3, 6),
+            number.substring(6, 8),
+            number.substring(8, 14),
+            number.substring(14));
     }
 }
