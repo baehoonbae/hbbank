@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
 
 @Entity
 @Getter
@@ -17,11 +18,19 @@ import lombok.NoArgsConstructor;
 public class AccountType {
 
     @Id
+    @Column(length = 10)
     private String code;
     
+    @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(nullable = false, length = 200)
     private String description;
+
+    @Column(nullable = false, precision = 4, scale = 2)
     private Double interestRate;
+
+    @Column(nullable = false)
     private Long minimumBalance;
 
 }
