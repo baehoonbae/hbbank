@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountController {
     private final AccountService accountService;
 
-    // 모든 계좌타입 조회
+    // 모든 계좌 타입 조회
     @GetMapping("/account-types")
     public ResponseEntity<?> getAccountTypes() {
         Optional<List<AccountType>> accountTypes = accountService.getAccountTypes();
@@ -58,7 +58,7 @@ public class AccountController {
         }
     }
 
-    // 계좌 목록 조회
+    // 특정 유저 pk 값으로 계좌 목록 조회
     @GetMapping("/accounts/{userId}")
     public ResponseEntity<?> getAccounts(@PathVariable Long userId) {
         Optional<List<Account>> accounts = accountService.findAllByUser_Id(userId);
@@ -72,10 +72,21 @@ public class AccountController {
         return ResponseEntity.notFound().build();
     }
 
-    // 특정 계좌 조회
+    // 계좌 pk로 특정 계좌 조회
     @GetMapping("/{id}")
     public ResponseEntity<?> getAccount(@PathVariable Long id) {
         Optional<Account> opAccount = accountService.findById(id);
+        if (opAccount.isPresent() && !opAccount.isEmpty()) {
+            AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());
+            return ResponseEntity.ok(accountDTO);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // 계좌 번호로 특정 계좌 조회
+    @GetMapping("/number/{accountNumber}")
+    public ResponseEntity<?> getAccount(@PathVariable String accountNumber){
+        Optional<Account> opAccount = accountService.findByAccountNumber(accountNumber);
         if (opAccount.isPresent() && !opAccount.isEmpty()) {
             AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());
             return ResponseEntity.ok(accountDTO);
