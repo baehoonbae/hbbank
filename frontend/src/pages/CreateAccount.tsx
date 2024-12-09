@@ -43,6 +43,7 @@ const CreateAccount = () => {
 
     const handleCreateAccount = async () => {
         try {
+            console.log(formData);
             const accessToken = sessionStorage.getItem('accessToken');
             await http.post('/account/create', formData, {
                 headers: {

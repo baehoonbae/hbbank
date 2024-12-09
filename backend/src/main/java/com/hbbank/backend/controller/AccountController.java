@@ -19,6 +19,7 @@ import com.hbbank.backend.dto.AccountCreateDTO;
 import com.hbbank.backend.dto.AccountResponseDTO;
 import com.hbbank.backend.service.AccountService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +46,7 @@ public class AccountController {
 
     // 계좌 개설
     @PostMapping("/create")
-    public ResponseEntity<?> createAccount(@RequestBody AccountCreateDTO request) {
+    public ResponseEntity<?> createAccount(@Valid @RequestBody AccountCreateDTO request) {
         Account registeredAccount = accountService.createAccount(request);
         if (registeredAccount != null) {
             return ResponseEntity

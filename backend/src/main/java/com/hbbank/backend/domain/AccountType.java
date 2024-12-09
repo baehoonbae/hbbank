@@ -27,7 +27,7 @@ public class AccountType {
     @Column(nullable = false, length = 200)
     private String description;
 
-    @Column(nullable = false, precision = 4, scale = 2)
+    @Column(nullable = false, columnDefinition = "DOUBLE(4,2)")
     private Double interestRate;
 
     @Column(nullable = false)

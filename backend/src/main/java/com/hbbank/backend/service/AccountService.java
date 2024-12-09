@@ -17,10 +17,12 @@ import com.hbbank.backend.util.AccountNumberGenerator;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AccountService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
@@ -40,6 +42,7 @@ public class AccountService {
                 .orElseThrow(() -> new RuntimeException("계좌 유형을 찾을 수 없습니다."));
 
         String accountNumber = numGen.generate(dto.getAccountTypeCode());
+        log.info(accountNumber);
 
         Account account2 = Account.builder()
                 .user(user)
