@@ -1,7 +1,11 @@
 package com.hbbank.backend.exception;
 
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,6 +16,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalExceptionHandler {
     
+    // Validation 예외 처리
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+        
+        // 모든 validation 오류 메시지를 수집
+        String errorMessage = ex.getBindingResult()
+            .getAllErrors()
+            .stream()
+            .map(error -> {
+                // 필드 에러인 경우 필드명도 포함
+                if (error instanceof FieldError) {
+                    return ((FieldError) error).getField() + ": " + error.getDefaultMessage();
+                }
+                return error.getDefaultMessage();
+            })
+            .collect(Collectors.joining(", "));
+
+        log.error("Validation failed: {}", errorMessage);
+        
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse(errorMessage));
+    }
+
     // 일반적인 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
