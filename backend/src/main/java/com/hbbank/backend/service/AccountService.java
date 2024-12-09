@@ -61,4 +61,8 @@ public class AccountService {
     public Optional<Account> findById(Long id) {
         return accountRepository.findById(id);
     }
+
+    public Optional<Account> findByAccountNumber(String accountNumber){
+        return accountRepository.findByAccountNumber(accountNumber);
+    }
 }

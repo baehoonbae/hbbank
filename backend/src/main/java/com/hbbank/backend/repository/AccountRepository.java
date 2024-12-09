@@ -12,4 +12,6 @@ import com.hbbank.backend.domain.Account;
 public interface AccountRepository extends JpaRepository<Account, Long> {
     
     public Optional<List<Account>> findAllByUser_Id(Long userId);
+
+    public Optional<Account> findByAccountNumber(String accountNumber);
 }
