@@ -4,10 +4,12 @@ import DepositSection from "../components/transfer/DepositSection";
 import WithdrawSection from "../components/transfer/WithdrawSection";
 import { TransferRequestDTO } from "../types/transfer";
 import PasswordModal from "../components/forms/PasswordModal";
+import { useNavigate } from "react-router-dom";
 
 const Transfer = () => {
     const [transferRequest, setTransferRequest] = useState<TransferRequestDTO | null>(null);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     const handleWithdrawChange = (accountId: number) => {
         setTransferRequest({ ...transferRequest, fromAccountId: accountId } as TransferRequestDTO);
@@ -26,25 +28,24 @@ const Transfer = () => {
     }
 
     const handlePasswordConfirm = async (password: string) => {
-        setTransferRequest({ ...transferRequest, password: password } as TransferRequestDTO);
-        if (!transferRequest || !transferRequest.fromAccountId || !transferRequest.toAccountNumber || !transferRequest.amount) {
+        const updatedTransferRequest = { ...transferRequest, password: password } as TransferRequestDTO;
+        if (!updatedTransferRequest || !updatedTransferRequest.fromAccountId || !updatedTransferRequest.toAccountNumber || !updatedTransferRequest.amount) {
             alert('모든 필드를 입력해주세요.');
             return;
         }
-        if (transferRequest.amount <= 0) {
+        if (updatedTransferRequest.amount <= 0) {
             alert('송금액은 0보다 커야 합니다.');
             return;
         }
         try {
             const accessToken = sessionStorage.getItem("accessToken");
-            console.log(transferRequest);
-            const response = await http.post("/transfer", transferRequest, {
+            await http.post("/transfer", updatedTransferRequest, {
                 headers: {
                     "Authorization": `Bearer ${accessToken}`
                 }
             });
-            console.log(response);
-            closePasswordModal();
+            alert("이체가 완료되었습니다.");
+            navigate("/");
         } catch (error) {
             console.error(error);
         }
@@ -61,9 +62,9 @@ const Transfer = () => {
             >
                 이체하기
             </button>
-            <PasswordModal 
-                isOpen={isPasswordModalOpen} 
-                onClose={closePasswordModal} 
+            <PasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={closePasswordModal}
                 onConfirm={handlePasswordConfirm}
             />
         </div>
