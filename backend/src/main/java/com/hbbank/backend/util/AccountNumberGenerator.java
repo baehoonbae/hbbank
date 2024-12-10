@@ -31,24 +31,16 @@ public class AccountNumberGenerator {
 
     // 계좌 종류 코드를 2자리 숫자로 변환
     private String convertTypeCodeToNumber(String code) {
-        switch (code) {
-            case "HBFREE":
-                return "01";
-            case "HBSAVE":
-                return "02";
-            case "HBYOUTH":
-                return "03";
-            case "HBPLUS":
-                return "04";
-            case "HBDIGITAL":
-                return "05";
-            case "HBSENIOR":
-                return "06";
-            case "HBBIZ":
-                return "07";
-            default:
-                return "00";
-        }
+        return switch (code) {
+            case "HBFREE" -> "01";
+            case "HBSAVE" -> "02";
+            case "HBYOUTH" -> "03";
+            case "HBPLUS" -> "04";
+            case "HBDIGITAL" -> "05";
+            case "HBSENIOR" -> "06";
+            case "HBBIZ" -> "07";
+            default -> "00";
+        };
     }
 
     // Luhn 알고리즘을 이용한 검증번호 생성

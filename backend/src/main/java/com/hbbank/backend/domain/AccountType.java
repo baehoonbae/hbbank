@@ -1,5 +1,6 @@
 package com.hbbank.backend.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -7,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.Column;
 
 @Entity
 @Getter
@@ -18,9 +18,9 @@ import jakarta.persistence.Column;
 public class AccountType {
 
     @Id
-    @Column(length = 10)
+    @Column(length = 10, nullable = false)
     private String code;
-    
+
     @Column(nullable = false, length = 50)
     private String name;
 

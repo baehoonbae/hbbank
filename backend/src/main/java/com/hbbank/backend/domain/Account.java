@@ -40,7 +40,7 @@ public class Account {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_type_code", nullable = false)
+    @JoinColumn(name = "account_type_code", nullable = false, columnDefinition = "varchar(10)")
     private AccountType accountType;
 
     @Column(nullable = false)
