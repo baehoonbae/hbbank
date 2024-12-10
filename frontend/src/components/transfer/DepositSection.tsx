@@ -9,8 +9,9 @@ const DepositSection = ({ onDepositChange }: DepositSectionProps) => {
     const [amount, setAmount] = useState<number>(0);
 
     const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setToAccountNumber(e.target.value);
-        onDepositChange(e.target.value, amount);
+        const cleanedAccountNumber = e.target.value.replace(/-/g, ''); // 하이픈 제거
+        setToAccountNumber(cleanedAccountNumber);
+        onDepositChange(cleanedAccountNumber, amount);
     }
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
