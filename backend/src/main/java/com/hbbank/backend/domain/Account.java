@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 
 import org.hibernate.annotations.ColumnDefault;
 
+import com.hbbank.backend.exception.OutofBalanceException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -66,5 +68,19 @@ public class Account {
     @Column(nullable = false)
     @NotBlank(message = "비밀번호는 필수입니다")
     private String password;
+
+    // Setter를 쓰지 않으려 하기 때문에 Entity 내부에 잔액 관련 메서드만(가장 핵심 필드이기 때문) 정의
+    // BigDecimal은 새로운 객체를 반환하기 때문에 다시 할당시켜줘야한다.
+    public void withdraw(BigDecimal amount) {
+        // 현재 잔액이 부족하면 예외 던지기
+        if (this.balance.compareTo(amount) == -1) {
+            throw new OutofBalanceException("잔액이 부족합니다.");
+        }
+        this.balance = this.balance.subtract(amount);
+    }
+
+    public void deposit(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
+    }
 
 }
