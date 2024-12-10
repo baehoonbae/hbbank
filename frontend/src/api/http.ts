@@ -20,23 +20,21 @@ const isTokenExpired = (token: string) => {
     }
 };
 
-let isLoggingOut = false;
-
 export const handleLogout = async () => {
-    isLoggingOut = true;
     try {
         const accessToken = sessionStorage.getItem('accessToken');
-        await http.post('/user/logout', null, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
+        if (accessToken) {
+            await http.post('/user/logout', null, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+        }
+    } catch (error) {
+        console.error('로그아웃 실패:', error);
+    } finally {
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('user');
         window.dispatchEvent(new Event('storage'));
         window.location.href = '/';
-    } catch (error) {
-        console.error('로그아웃 실패:', error);
-    } finally {
-        isLoggingOut = false;
     }
 };
 
@@ -44,7 +42,7 @@ http.interceptors.request.use(
     async (config) => {
         const accessToken = sessionStorage.getItem('accessToken');
         
-        if (!isLoggingOut && accessToken && isTokenExpired(accessToken)) {
+        if (accessToken && isTokenExpired(accessToken)) {
             try {
                 const response = await axios.post(
                     `${import.meta.env.VITE_API_BASE_URL}/user/refresh`,
@@ -72,7 +70,7 @@ http.interceptors.request.use(
 http.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
             handleLogout();
         }
         return Promise.reject(error);

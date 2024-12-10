@@ -121,7 +121,7 @@ public class UserController {
             Long userId = jwtUtil.getUserId(token);
             tokenService.revokeRefreshToken(userId);
         } catch (Exception e) {
-            log.warn("Invalid token during logout: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body("서버 오류 발생");
         }
 
         ResponseCookie clear = ResponseCookie.from("refreshToken", "")
