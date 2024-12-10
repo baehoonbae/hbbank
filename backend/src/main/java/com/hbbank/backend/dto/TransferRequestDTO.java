@@ -17,7 +17,7 @@ public class TransferRequestDTO {
     private final Long fromAccountId; // 출금 계좌 id
     
     @NotBlank(message = "입금 계좌번호는 필수입니다")
-    @Pattern(regexp = "^[0-9]{14}$", message = "입금 계좌번호는 14자리 숫자여야 합니다")
+    @Pattern(regexp = "^[0-9]{15}$", message = "입금 계좌번호는 15자리 숫자여야 합니다")
     private final String toAccountNumber; // 입금계좌 계좌번호
 
     @NotNull(message = "이체 금액은 필수입니다")
@@ -25,6 +25,5 @@ public class TransferRequestDTO {
     private final BigDecimal amount; // 이체 금액
 
     @NotBlank(message = "비밀번호는 필수입니다")
-    @Pattern(regexp = "^[0-9]{4}$", message = "비밀번호는 4자리 숫자여야 합니다")
     private final String password; // 출금 계좌 비밀번호
 }

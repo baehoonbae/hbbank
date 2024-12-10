@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TransferController {
     private final TransferService transferService;
 
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<?> executeTransfer(@Valid @RequestBody TransferRequestDTO dto) {
         boolean success = transferService.executeTransfer(dto);
         if (success) {
