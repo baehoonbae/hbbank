@@ -37,6 +37,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
+	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.testcontainers:junit-jupiter'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -45,4 +48,21 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty 'spring.profiles.active', 'test'
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat = 'full'
+	}
+}
+
+test {
+    systemProperty 'spring.profiles.active', 'test'
+}
+
+sourceSets {
+	test {
+		resources {
+			srcDirs = ['src/test/resources']
+		}
+	}
 }
