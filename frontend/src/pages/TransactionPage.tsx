@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import TransactionSearchBar from '../components/transaction/TransactionSearchBar';
 import type { Transaction, TransactionSearchDTO } from '../types/transaction';
 import http from '../api/http';
