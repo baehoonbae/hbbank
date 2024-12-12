@@ -42,7 +42,6 @@ public class AccountService {
                 .orElseThrow(() -> new RuntimeException("계좌 유형을 찾을 수 없습니다."));
 
         String accountNumber = numGen.generate(dto.getAccountTypeCode());
-        log.info(accountNumber);
 
         Account account2 = Account.builder()
                 .user(user)
@@ -58,14 +57,14 @@ public class AccountService {
     }
 
     public Optional<List<Account>> findAllByUser_Id(Long userId) {
-        return accountRepository.findAllByUser_Id(userId);
+        return accountRepository.findAllByUser_IdWithUser(userId);
     }
 
     public Optional<Account> findById(Long id) {
-        return accountRepository.findById(id);
+        return accountRepository.findByIdWithUser(id);
     }
 
     public Optional<Account> findByAccountNumber(String accountNumber){
-        return accountRepository.findByAccountNumber(accountNumber);
+        return accountRepository.findByAccountNumberWithUser(accountNumber);
     }
 }

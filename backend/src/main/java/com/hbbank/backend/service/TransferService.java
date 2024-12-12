@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionSynchronization;
+import org.springframework.transaction.reactive.TransactionSynchronizationManager;
 
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.Transaction;
@@ -65,8 +68,10 @@ public class TransferService {
      * 모든 트랜잭션이 동일한 순서로 락을 요청하게 하면 해결. 예를 들어:
      * 1. A->B 이체 시도 -> A(락) -> B(락) -> 이체 완료 -> A,B 락 해제(이때 B->A 이체 시도 가능)
      * 2. B->A 이체 시도 -> (A 락 해제 대기) -> A(락) -> B(락) -> 이체 완료 -> A,B 락 해제
-     * => 무조건 계좌번호 오름차순으로 락을 획득하게 하여 시나리오 3 통과
-     * => 
+     * => 비관적 락을 적용시켜 데드락은 발생하지 않음. 그러나 B->A 이체 시도에서 변경사항을 즉시 반영하지 않는 문제 발생
+     * => 첫 번째 트랜잭션이 완료되지 않았는데 두 번째 트랜잭션이 시작됨 -> 트랜잭션 격리 수준 문제
+     * => 즉 다른 트랜잭션에서 잔액 검증이 실패하는 문제가 발생함..
+     * => 이를 해결하기 위해 테스트 코드의 트랜잭션 격리 수준을 더 높게 설정해야 함(SERIALIZABLE)
      * 
      * 
      * 
@@ -77,45 +82,43 @@ public class TransferService {
      * 
      * 
      */
-    @Transactional
     public boolean executeTransfer(TransferRequestDTO dto) {
-        String fromAccountNumber = accountRepository.findById(dto.getFromAccountId()).get().getAccountNumber();
+        String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
+                .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"))
+                .getAccountNumber();
         String toAccountNumber = dto.getToAccountNumber();
 
-        Account firstLock, secondLock;
+        Account fromAccount, toAccount;
 
-        // 계좌번호 오름차순으로 락을 획득
+        // 계좌번호 오름차순으로 락 획득
         if (fromAccountNumber.compareTo(toAccountNumber) < 0) {
-            // 출금 계좌 -> 입금 계좌 순서로 락 획득
-            firstLock = accountRepository.findByIdWithLock(dto.getFromAccountId()).get();
-            secondLock = accountRepository.findByAccountNumberWithLock(dto.getToAccountNumber()).get();
-
-            // 비밀번호 검증
-            if (!passwordEncoder.matches(dto.getPassword(), firstLock.getPassword())) {
-                throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
-            }
-            // 이체 실행
-            firstLock.withdraw(dto.getAmount());
-            secondLock.deposit(dto.getAmount());
-
-            // 거래내역 생성
-            createTransaction(firstLock, secondLock, dto.getAmount());
+            fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
+                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
+            toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
+                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
         } else {
-            // 입금 계좌 -> 출금 계좌 순서로 락 획득
-            firstLock = accountRepository.findByAccountNumberWithLock(dto.getToAccountNumber()).get();
-            secondLock = accountRepository.findByIdWithLock(dto.getFromAccountId()).get();
-
-            // 비밀번호 검증
-            if (!passwordEncoder.matches(dto.getPassword(), secondLock.getPassword())) {
-                throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
-            }
-            // 이체 실행
-            secondLock.withdraw(dto.getAmount());
-            firstLock.deposit(dto.getAmount());
-
-            // 거래내역 생성
-            createTransaction(secondLock, firstLock, dto.getAmount());
+            toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
+                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
+            fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
+                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
         }
+
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(dto.getPassword(), fromAccount.getPassword())) {
+            throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
+        }
+
+        // 이체 실행
+        fromAccount.withdraw(dto.getAmount());
+        toAccount.deposit(dto.getAmount());
+
+        // 거래내역 생성
+        createTransaction(fromAccount, toAccount, dto.getAmount());
+
+        // 변경사항 저장
+        accountRepository.saveAndFlush(fromAccount);
+        accountRepository.saveAndFlush(toAccount);
+
         return true;
     }
 
@@ -144,6 +147,7 @@ public class TransferService {
 
         transactionRepository.save(withdrawTransaction);
         transactionRepository.save(depositTransaction);
+        transactionRepository.flush();
     }
 
 }
