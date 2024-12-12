@@ -1,46 +1,46 @@
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, useParams } from 'react-router-dom';
 
 // 페이지 컴포넌트들
-import AccountList from '../pages/AccountList';
-import Home from '../pages/Home';
-import Login from '../pages/Login';
-import SignUp from '../pages/SignUp';
-import Transaction from '../pages/Transaction';
-import Transfer from '../pages/Transfer';
-import CreateAccount from '../pages/CreateAccount';
-import AccountDetail from '../pages/AccountDetail';
+import AccountListPage from '../pages/AccountListPage';
+import HomePage from '../pages/HomePage';
+import LoginPage from '../pages/LoginPage';
+import SignUpPage from '../pages/SignUpPage';
+import TransactionPage from '../pages/TransactionPage';
+import TransferPage from '../pages/TransferPage';
+import CreateAccountPage from '../pages/CreateAccountPage';
+import AccountDetailPage from '../pages/AccountDetailPage';
 
 export const routes: RouteObject[] = [
     {
         path: '/',
-        element: <Home />
+        element: <HomePage />
     },
     {
         path: '/login',
-        element: <Login />
+        element: <LoginPage />
     },
     {
         path: '/signup',
-        element: <SignUp />
+        element: <SignUpPage />
     },
     {
         path: '/transfer',
-        element: <Transfer />
+        element: <TransferPage />
     },
     {
         path: '/account-list',
-        element: <AccountList />
+        element: <AccountListPage />
     },
     {
         path: '/transaction',
-        element: <Transaction />
+        element: <TransactionPage />
     },
     {
         path: 'create-account',
-        element: <CreateAccount />
+        element: <CreateAccountPage />
     },
     {
         path: '/account/:id',
-        element: <AccountDetail />
+        element: <AccountDetailPage />
     }
 ]; 

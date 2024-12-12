@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import http from "../api/http";
+import PasswordModal from "../components/forms/PasswordModal";
 import DepositSection from "../components/transfer/DepositSection";
 import WithdrawSection from "../components/transfer/WithdrawSection";
 import { TransferRequestDTO } from "../types/transfer";
-import PasswordModal from "../components/forms/PasswordModal";
-import { useNavigate } from "react-router-dom";
 
 const Transfer = () => {
     const [transferRequest, setTransferRequest] = useState<TransferRequestDTO | null>(null);
