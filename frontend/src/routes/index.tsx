@@ -1,4 +1,4 @@
-import { RouteObject, useParams } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 
 // 페이지 컴포넌트들
 import AccountListPage from '../pages/AccountListPage';

@@ -1,4 +1,3 @@
-import { Account } from "./account";
 
 export interface Transaction {
     id: number;
@@ -10,4 +9,12 @@ export interface Transaction {
     withdrawalAmount: number;
     depositAmount: number;
     balance: number;
+}
+
+export interface TransactionSearchDTO {
+    accountId: number | null;
+    startDate: string | null;
+    endDate: string | null;
+    transactionType: number;
+    page: number;
 }
