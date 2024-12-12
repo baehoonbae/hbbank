@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.hbbank.backend.domain.Transaction;
+import com.hbbank.backend.dto.TransactionSearchDTO;
 import com.hbbank.backend.repository.TransactionRepository;
 
 import jakarta.transaction.Transactional;
@@ -22,6 +23,10 @@ public class TransactionService {
 
     public Optional<List<Transaction>> findAllByAccount_IdOrderByTransactionDateTimeDesc(Long accountId) {
         return transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
+    }
+
+    public Optional<List<Transaction>> findAllByCondition(TransactionSearchDTO dto) {
+        return transactionRepository.findAllByCondition(dto);
     }
 
 }

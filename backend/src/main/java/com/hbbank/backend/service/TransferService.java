@@ -5,10 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.reactive.TransactionSynchronization;
-import org.springframework.transaction.reactive.TransactionSynchronizationManager;
 
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.Transaction;
@@ -78,7 +75,7 @@ public class TransferService {
      * 이체 시나리오 4.
      * 체이닝 이체 (1->2, 2->3, 3->4, 4->5.... 999->1000)
      * 데드락 발생 예상
-     * 
+     * => 시나리오 2, 3 문제점 해결 후 통과
      * 
      * 
      */
