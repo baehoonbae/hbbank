@@ -1,4 +1,4 @@
-import { Transaction } from "../../types/transaction";
+import { Transaction } from "../../atoms/transaction";
 
 const TransactionItem = ({ transaction }: { transaction: Transaction }) => {
     const isWithdrawal = transaction.transactionType === "출금";

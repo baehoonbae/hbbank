@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useAccounts } from "../../hooks/useAccounts";
+import { useTransfer } from "../../hooks/useTransfer";
 
 interface PasswordModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConfirm: (password: string) => void;
 }
 
-const PasswordModal = ({ isOpen, onClose, onConfirm }: PasswordModalProps) => {
-    const [password, setPassword] = useState<string>("");
+const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
+    const { transfer, updateTransferRequest } = useTransfer();
+    const { fetchAccounts } = useAccounts();
 
     const handleSubmit = () => {
-        onConfirm(password);
-        setPassword("");
+        transfer();
+        updateTransferRequest({ password: "" });
         onClose();
     };
 
@@ -24,8 +25,7 @@ const PasswordModal = ({ isOpen, onClose, onConfirm }: PasswordModalProps) => {
                 <input
                     type="password"
                     maxLength={4}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => updateTransferRequest({ password: e.target.value })}
                     placeholder="4자리 비밀번호 입력"
                     className="w-full p-2 border rounded mb-4"
                 />

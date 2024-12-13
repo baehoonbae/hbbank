@@ -1,4 +1,4 @@
-import { Account } from "../../types/account";
+import { Account } from "../../atoms/account";
 
 const AccountItem = ({ account }: { account: Account }) => {
     return (

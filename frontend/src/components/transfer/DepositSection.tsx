@@ -1,22 +1,16 @@
-import { useState } from "react";
+import { BanknotesIcon, CreditCardIcon } from "@heroicons/react/24/outline";
+import { useTransfer } from "../../hooks/useTransfer";
 
-interface DepositSectionProps {
-    onDepositChange: (accountNumber: string, amount: number) => void;
-}
-
-const DepositSection = ({ onDepositChange }: DepositSectionProps) => {
-    const [toAccountNumber, setToAccountNumber] = useState<string>("");
-    const [amount, setAmount] = useState<number>(0);
+const DepositSection = () => {
+    const { updateTransferRequest } = useTransfer();
 
     const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const cleanedAccountNumber = e.target.value.replace(/-/g, '');
-        setToAccountNumber(cleanedAccountNumber);
-        onDepositChange(cleanedAccountNumber, amount);
+        updateTransferRequest({ toAccountNumber: cleanedAccountNumber });
     }
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setAmount(Number(e.target.value));
-        onDepositChange(toAccountNumber, Number(e.target.value));
+        updateTransferRequest({ amount: Number(e.target.value) });
     }
 
     return (
@@ -29,12 +23,15 @@ const DepositSection = ({ onDepositChange }: DepositSectionProps) => {
                 <div className="space-y-8">
                     <div className="flex items-center group">
                         <label className="w-40 text-gray-700 font-bold text-lg group-hover:text-indigo-600 transition-colors">입금계좌번호</label>
-                        <input
-                            type="text"
-                            className="flex-1 p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-300 bg-white bg-opacity-70 backdrop-blur-sm"
-                            placeholder="💳 계좌번호를 입력하세요"
-                            onChange={handleDepositChange}
-                        />
+                        <div className="flex-1 relative">
+                            <input
+                                type="text"
+                                className="w-full p-4 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-300 bg-white bg-opacity-70 backdrop-blur-sm"
+                                placeholder="계좌번호를 입력하세요"
+                                onChange={handleDepositChange}
+                            />
+                            <CreditCardIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        </div>
                     </div>
                     <div className="flex items-center group">
                         <label className="w-40 text-gray-700 font-bold text-lg group-hover:text-indigo-600 transition-colors">이체금액</label>
@@ -43,10 +40,11 @@ const DepositSection = ({ onDepositChange }: DepositSectionProps) => {
                                 type="text"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
-                                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-300 bg-white bg-opacity-70 backdrop-blur-sm"
-                                placeholder="💰 금액을 입력하세요"
+                                className="w-full p-4 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-400 transition-all duration-300 bg-white bg-opacity-70 backdrop-blur-sm"
+                                placeholder="금액을 입력하세요"
                                 onChange={handleAmountChange}
                             />
+                            <BanknotesIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-600 font-bold">원</span>
                         </div>
                     </div>

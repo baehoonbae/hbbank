@@ -1,3 +1,5 @@
+import { atom } from 'recoil';
+
 export interface Account {
     id: number,
     accountName: string,
@@ -20,3 +22,18 @@ export interface AccountCreateDTO {
     balance: number;
     password: string;
 }
+
+export const accountState = atom<Account[]>({
+    key: 'accountState',
+    default: []
+});
+
+export const accountTypeState = atom<AccountType[]>({
+    key: 'accountTypeState', 
+    default: []
+});
+
+export const selectedAccountState = atom<Account | null>({
+    key: 'selectedAccountState',
+    default: null
+});

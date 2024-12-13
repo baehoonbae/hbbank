@@ -1,40 +1,10 @@
-import { useEffect, useState } from 'react';
-import http from '../../api/http';
-import type { Account } from '../../types/account';
-import type { TransactionSearchDTO } from '../../types/transaction';
+import { useRecoilValue } from 'recoil';
+import { accountState } from '../../atoms/account';
+import { useTransactions } from '../../hooks/useTransactions';
 
-interface TransactionSearchBarProps {
-    onSearch: (dto: TransactionSearchDTO) => void;
-}
-
-const TransactionSearchBar = ({ onSearch }: TransactionSearchBarProps) => {
-    const [transactionSearchDTO, setTransactionSearchDTO] = useState<TransactionSearchDTO>({
-        accountId: null,
-        startDate: null,
-        endDate: null,
-        transactionType: 0, //0: 전체, 1: 입금, 2: 출금
-        page: 0
-    });
-    const [accounts, setAccounts] = useState<Account[]>([]);
-
-    useEffect(() => {
-        getAccounts();
-    }, []);
-
-    const getAccounts = async () => {
-        try {
-            const userId = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')!).id : 0;
-            const accessToken = sessionStorage.getItem('accessToken');
-            const response = await http.get(`/account/accounts/${userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setAccounts(response.data);
-        } catch (error) {
-            console.error(error);
-        }
-    }
+const TransactionSearchBar = ({ search }: { search: () => void }) => {
+    const { searchParams, updateSearchParams } = useTransactions();
+    const accounts = useRecoilValue(accountState);
 
     return (
         <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -43,8 +13,8 @@ const TransactionSearchBar = ({ onSearch }: TransactionSearchBarProps) => {
                 <div className="relative">
                     <select
                         className="w-full p-3 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        value={transactionSearchDTO.accountId ? transactionSearchDTO.accountId.toString() : ''}
-                        onChange={(e) => setTransactionSearchDTO({ ...transactionSearchDTO, accountId: Number(e.target.value) })}
+                        value={searchParams.accountId ? searchParams.accountId.toString() : ''}
+                        onChange={(e) => updateSearchParams({ accountId: Number(e.target.value) })}
                     >
                         <option value="">계좌를 선택하세요</option>
                         {accounts.map((account) => (
@@ -62,23 +32,23 @@ const TransactionSearchBar = ({ onSearch }: TransactionSearchBarProps) => {
                     <input
                         type="date"
                         className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        value={transactionSearchDTO.startDate ? transactionSearchDTO.startDate : ''}
-                        onChange={(e) => setTransactionSearchDTO({ ...transactionSearchDTO, startDate: e.target.value })}
+                        value={searchParams.startDate ? searchParams.startDate : ''}
+                        onChange={(e) => updateSearchParams({ startDate: e.target.value })}
                     />
                     <span className="text-gray-500 font-medium">~</span>
                     <input
                         type="date"
                         className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        value={transactionSearchDTO.endDate ? transactionSearchDTO.endDate : ''}
-                        onChange={(e) => setTransactionSearchDTO({ ...transactionSearchDTO, endDate: e.target.value })}
+                        value={searchParams.endDate ? searchParams.endDate : ''}
+                        onChange={(e) => updateSearchParams({ endDate: e.target.value })}
                     />
                 </div>
 
                 <div className="relative">
                     <select
                         className="w-full p-3 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        value={transactionSearchDTO.transactionType}
-                        onChange={(e) => setTransactionSearchDTO({ ...transactionSearchDTO, transactionType: Number(e.target.value) })}
+                        value={searchParams.transactionType}
+                        onChange={(e) => updateSearchParams({ transactionType: Number(e.target.value) })}
                     >
                         <option value="0">전체</option>
                         <option value="1">입금</option>
@@ -93,7 +63,7 @@ const TransactionSearchBar = ({ onSearch }: TransactionSearchBarProps) => {
 
                 <button
                     className="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all active:scale-95 shadow-md"
-                    onClick={() => onSearch(transactionSearchDTO)}>
+                    onClick={search}>
                     거래내역 검색
                 </button>
             </div>

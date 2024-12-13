@@ -1,31 +1,11 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import http from "../api/http";
+import { useRecoilValue } from "recoil";
+import { accountState } from "../atoms/account";
 import AccountItem from '../components/account/AccountItem';
-import { Account } from "../types/account";
 
 const AccountList = () => {
     const navigate = useNavigate();
-    const user = sessionStorage.getItem('user');
-    const [accounts, setAccounts] = useState<Account[]>([]);
-
-    useEffect(() => {
-        getAccounts(user ? JSON.parse(user).id : 0);
-    }, []);
-
-    const getAccounts = async (userId: number) => {
-        try {
-            const accessToken = sessionStorage.getItem('accessToken');
-            const response = await http.get(`/account/accounts/${userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setAccounts(response.data);
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    const accounts = useRecoilValue(accountState);
 
     return (
         <>
