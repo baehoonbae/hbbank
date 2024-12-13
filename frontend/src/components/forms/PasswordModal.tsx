@@ -1,4 +1,3 @@
-import { useAccounts } from "../../hooks/useAccounts";
 import { useTransfer } from "../../hooks/useTransfer";
 
 interface PasswordModalProps {
@@ -8,7 +7,6 @@ interface PasswordModalProps {
 
 const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
     const { transfer, updateTransferRequest } = useTransfer();
-    const { fetchAccounts } = useAccounts();
 
     const handleSubmit = () => {
         transfer();

@@ -6,8 +6,8 @@ const Home = () => {
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50 p-8">
             <div className="max-w-4xl text-center">
                 <h1 className="text-7xl font-black mb-6 tracking-tight leading-tight">
-                    금융이
-                    <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                    금융이 
+                    <span className="ml-7 bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
                         쉬워진다
                     </span>
                 </h1>

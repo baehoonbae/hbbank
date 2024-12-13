@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import http from "../api/http";
 import AccountBalanceSection from "../components/account/AccountBalanceSection";
 import AccountCountSection from "../components/account/AccountCountSection";
 import AccountExpenseSection from "../components/account/AccountExpenseSection";
