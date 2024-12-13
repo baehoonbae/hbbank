@@ -38,7 +38,7 @@ public class UserController {
     private final JwtUtil jwtUtil;
 
     // 회원가입
-    @PostMapping("/regist")
+    @PostMapping("/signup")
     public ResponseEntity<?> regist(@Valid @RequestBody UserRegistDTO dto) {       
         User registeredUser = userService.regist(dto);
         if (registeredUser != null) {
