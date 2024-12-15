@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hbbank.backend.domain.User;
@@ -20,6 +21,7 @@ import com.hbbank.backend.dto.RefreshTokenDTO;
 import com.hbbank.backend.dto.TokenResponseDTO;
 import com.hbbank.backend.dto.UserRegistDTO;
 import com.hbbank.backend.exception.InvalidTokenException;
+import com.hbbank.backend.service.EmailService;
 import com.hbbank.backend.service.TokenService;
 import com.hbbank.backend.service.UserService;
 import com.hbbank.backend.util.JwtUtil;
@@ -33,13 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class UserController {
+
     private final UserService userService;
     private final TokenService tokenService;
+    private final EmailService emailService;
     private final JwtUtil jwtUtil;
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<?> regist(@Valid @RequestBody UserRegistDTO dto) {       
+    public ResponseEntity<?> regist(@Valid @RequestBody UserRegistDTO dto) {
         User registeredUser = userService.regist(dto);
         if (registeredUser != null) {
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -136,5 +140,27 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clear.toString())
                 .body("로그아웃 성공");
+    }
+
+    // 인증 메일 발송 요청
+    @PostMapping("/email/send")
+    public ResponseEntity<?> sendVerificationEmail(@RequestParam String email) {
+        emailService.sendVerificationEmail(email);
+        return ResponseEntity.ok()
+            .body(Map.of("message", "인증 코드가 발송되었습니다."));
+    }
+    
+    // 인증 코드 확인
+    @PostMapping("/email/verify")
+    public ResponseEntity<?> verifyEmail(
+            @RequestParam String email,
+            @RequestParam String code) {
+        if (emailService.verifyEmail(email, code)) {
+            userService.completeEmailVerification(email);
+            return ResponseEntity.ok()
+                .body(Map.of("message", "이메일 인증이 완료되었습니다."));
+        }
+        return ResponseEntity.badRequest()
+            .body(Map.of("message", "잘못된 인증 코드입니다."));
     }
 }

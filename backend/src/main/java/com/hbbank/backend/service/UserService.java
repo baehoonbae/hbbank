@@ -1,6 +1,5 @@
 package com.hbbank.backend.service;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -53,4 +53,10 @@ public class UserService {
         }
     }
 
+    public void completeEmailVerification(String email) {
+        userRepository.findByEmail(email)
+                .ifPresent(user -> {
+                    userRepository.save(user);
+                });
+    }
 }

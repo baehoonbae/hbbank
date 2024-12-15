@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table(name = "user")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,10 +57,10 @@ public class User {
     private String address;
 
     @NotBlank(message = "전화번호는 필수입니다")
-    @Pattern(regexp = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$", 
+    @Pattern(regexp = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$",
             message = "올바른 전화번호 형식이 아닙니다")
     private String phone;
-    
+
     @NotBlank(message = "이메일은 필수입니다")
     @Email(message = "올바른 이메일 형식이 아닙니다")
     @Column(unique = true)
