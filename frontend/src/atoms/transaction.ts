@@ -13,6 +13,7 @@ export interface Transaction {
 }
 
 export interface TransactionSearchDTO {
+    userId: number;
     accountId: number | null;
     startDate: string | null;
     endDate: string | null;
@@ -28,6 +29,7 @@ export const transactionState = atom<Transaction[]>({
 export const transactionSearchState = atom<TransactionSearchDTO>({
     key: 'transactionSearchState',
     default: {
+        userId: 0,
         accountId: null,
         startDate: null,
         endDate: null,

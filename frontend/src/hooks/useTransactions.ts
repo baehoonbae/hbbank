@@ -5,6 +5,7 @@ import http from '../api/http';
 export const useTransactions = () => {
     const [transactions, setTransactions] = useRecoilState(transactionState);
     const [searchParams, setSearchParams] = useRecoilState(transactionSearchState);
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
 
     const searchTransactions = async () => {
         try {
@@ -36,6 +37,7 @@ export const useTransactions = () => {
         try {
             const response = await http.post(`/transaction/transactions/search`,
                 {
+                    userId: user.id,
                     accountId: 0,
                     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
                     endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0],

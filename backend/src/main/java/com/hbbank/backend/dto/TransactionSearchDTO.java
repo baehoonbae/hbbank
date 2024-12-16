@@ -10,6 +10,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class TransactionSearchDTO {
+    private final Long userId;
+
     private final Long accountId;
     
     @NotBlank(message = "시작일은 필수입니다")

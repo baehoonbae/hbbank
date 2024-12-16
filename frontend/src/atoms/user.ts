@@ -24,6 +24,13 @@ export interface UserResponseDTO {
     message: string;
 }
 
+export interface OAuth2UserAdditionalInfoDTO {
+    birth: string;
+    username: string;
+    address: string;
+    phone: string;
+}
+
 export const userSignUpState = atom<UserSignUpDTO>({
     key: 'userSignUpState',
     default: {
@@ -47,5 +54,10 @@ export const userLoginState = atom<UserLoginDTO>({
 
 export const userResponseState = atom<UserResponseDTO | null>({
     key: 'userResponseState',
+    default: null
+});
+
+export const oAuth2UserAdditionalInfoState = atom<OAuth2UserAdditionalInfoDTO | null>({
+    key: 'oAuth2UserAdditionalInfoState',
     default: null
 });

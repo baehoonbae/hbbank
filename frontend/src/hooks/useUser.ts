@@ -1,12 +1,24 @@
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import http from '../api/http';
-import { userLoginState, UserResponseDTO, userResponseState, userSignUpState } from '../atoms/user';
+import { oAuth2UserAdditionalInfoState, userLoginState, UserResponseDTO, userResponseState, userSignUpState } from '../atoms/user';
 export const useUser = () => {
     const [signUpData, setSignUpData] = useRecoilState(userSignUpState);
     const [loginData, setLoginData] = useRecoilState(userLoginState);
     const [userData, setUserData] = useRecoilState(userResponseState);
+    const [oAuth2UserAdditionalInfo,] = useRecoilState(oAuth2UserAdditionalInfoState);
     const navigate = useNavigate();
+
+    const me = async () => {
+        const accessToken = sessionStorage.getItem('accessToken');
+        const response = await http.get('/user/me', {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
+        setUserData(response.data);
+        return response.data;
+    }
 
     const login = async () => {
         try {
@@ -40,6 +52,23 @@ export const useUser = () => {
         sessionStorage.removeItem('accessToken');
     };
 
+    const updateOAuth2UserAdditionalInfo = async () => {
+        try {
+            const accessToken = sessionStorage.getItem('accessToken');
+            await http.post('/user/oauth2/additional-info', oAuth2UserAdditionalInfo, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            alert('추가 정보가 성공적으로 저장되었습니다.');
+            navigate('/');
+
+        } catch (error) {
+            console.error('추가 정보 업데이트 실패:', error);
+
+        }
+    };
+
     return {
         signUpData,
         loginData,
@@ -48,6 +77,8 @@ export const useUser = () => {
         setLoginData,
         login,
         signUp,
-        logout
+        logout,
+        updateOAuth2UserAdditionalInfo,
+        me
     };
 };

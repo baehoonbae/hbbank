@@ -20,6 +20,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT t FROM Transaction t " +
            "WHERE (:#{#dto.accountId} = 0 OR :#{#dto.accountId} is null OR :#{#dto.accountId} = t.account.id) " +
+           "AND (:#{#dto.userId} = t.account.user.id) " +
            "AND CAST(t.transactionDateTime AS date) BETWEEN CAST(:#{#dto.startDate} AS date) AND CAST(:#{#dto.endDate} AS date) " +
            "AND (:#{#dto.transactionType} = 0 OR " +
            "    (:#{#dto.transactionType} = 1 AND t.transactionType = '입금') OR " + 
