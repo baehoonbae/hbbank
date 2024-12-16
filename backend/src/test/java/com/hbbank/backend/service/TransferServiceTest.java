@@ -94,7 +94,7 @@ class TransferServiceTest {
         assertEquals(transferAmount.stripTrailingZeros(), withdrawal.getWithdrawalAmount().stripTrailingZeros());
         assertEquals(BigDecimal.ZERO.stripTrailingZeros(), withdrawal.getDepositAmount().stripTrailingZeros());
 
-        // 입금 거래내�� 검증
+        // 입금 거래내역 검증
         List<Transaction> deposits = transactionRepository
                 .findByAccountAndTransactionType(toAccount, "입금").get();
 

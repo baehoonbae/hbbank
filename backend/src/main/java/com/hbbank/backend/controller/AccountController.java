@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AccountController {
+
     private final AccountService accountService;
 
     // 모든 계좌 타입 조회
@@ -52,11 +53,10 @@ public class AccountController {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(registeredAccount);
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("계좌 개설 실패");
         }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("계좌 개설 실패");
     }
 
     // 특정 유저 pk 값으로 계좌 목록 조회
@@ -86,7 +86,7 @@ public class AccountController {
 
     // 계좌 번호로 특정 계좌 조회
     @GetMapping("/number/{accountNumber}")
-    public ResponseEntity<?> getAccount(@PathVariable String accountNumber){
+    public ResponseEntity<?> getAccount(@PathVariable String accountNumber) {
         Optional<Account> opAccount = accountService.findByAccountNumber(accountNumber);
         if (opAccount.isPresent() && !opAccount.isEmpty()) {
             AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());

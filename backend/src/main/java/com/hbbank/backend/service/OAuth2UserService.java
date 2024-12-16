@@ -10,8 +10,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.hbbank.backend.domain.User;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,7 +26,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         String name = oauth2User.getAttribute("name");
         
         // 사용자 정보로 회원가입 또는 로그인 처리
-        User user = userService.findByEmail(email)
+        userService.findByEmail(email)
             .orElseGet(() -> userService.registOAuth2User(email, name));
             
         return new DefaultOAuth2User(
