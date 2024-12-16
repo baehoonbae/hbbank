@@ -1,8 +1,8 @@
+import AutoTransferForm from '../components/forms/AutoTransferForm';
+
 const AutoTransferPage = () => {
     return (
-        <div>
-            <h1>자동이체</h1>
-        </div>
+        <AutoTransferForm />
     )
 }
 

@@ -1,10 +1,11 @@
 import { useRecoilState } from 'recoil';
-import { TransferRequestDTO, transferRequestState } from '../atoms/transfer';
+import { autoTransferRequestState, TransferRequestDTO, transferRequestState } from '../atoms/transfer';
 import http from '../api/http';
 import { useNavigate } from 'react-router-dom';
 
 export const useTransfer = () => {
     const [transferRequest, setTransferRequest] = useRecoilState(transferRequestState);
+    const [autoTransferRequest, setAutoTransferRequest] = useRecoilState(autoTransferRequestState);
     const navigate = useNavigate();
 
     const transfer = async () => {
@@ -32,9 +33,30 @@ export const useTransfer = () => {
         }
     };
 
+    const autoTransfer = async () => {
+        try {
+            console.log(autoTransferRequest);
+            await http.post('/auto-transfer/register', autoTransferRequest, {
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
+                }
+            });
+            alert('자동이체가 등록되었습니다.');
+            navigate('/');
+            return true;
+        } catch (error) {
+            console.error('자동이체 실패:', error);
+            return false;
+        }
+    }
+
     const updateTransferRequest = (data: Partial<typeof transferRequest>) => {
         setTransferRequest(prev => ({ ...prev, ...data }));
     };
 
-    return { transferRequest, transfer, updateTransferRequest };
+    const updateAutoTransferRequest = (data: Partial<typeof autoTransferRequest>) => {
+        setAutoTransferRequest(prev => ({ ...prev, ...data }));
+    };
+
+    return { transferRequest, transfer, updateTransferRequest, autoTransferRequest, updateAutoTransferRequest, autoTransfer };
 };
