@@ -13,6 +13,8 @@ import AccountDetailPage from '../pages/AccountDetailPage';
 import UserDashBoard from '../pages/UserDashBoard';
 import AutoTransferPage from '../pages/AutoTransferPage';
 import ReserveTransferPage from '../pages/ReserveTransferPage';
+import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
+import AdditionalInfoPage from '../pages/AdditionalInfoPage';
 
 // 인증이 필요한 라우트를 위한 컴포넌트
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -70,5 +72,13 @@ export const routes: RouteObject[] = [
     {
         path: '/account/:id',
         element: <PrivateRoute><AccountDetailPage /></PrivateRoute>
+    },
+    {
+        path: '/oauth2/redirect',
+        element: <OAuth2RedirectPage />
+    },  
+    {
+        path: '/oauth2/additional-info',
+        element: <AdditionalInfoPage />
     }
 ];

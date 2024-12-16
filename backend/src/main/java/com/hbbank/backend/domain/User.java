@@ -68,4 +68,16 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Account> accounts;
+
+    private boolean emailVerified;
+    private boolean isOAuth2User;
+    private boolean needAdditionalInfo;
+
+    public void updateAdditionalInfo(LocalDate birth, String username, String address, String phone) {
+        this.birth = birth;
+        this.username = username;
+        this.address = address;
+        this.phone = phone;
+        this.needAdditionalInfo = false;
+    }
 }
