@@ -2,7 +2,7 @@ import AutoTransferForm from '../components/forms/AutoTransferForm';
 
 const AutoTransferPage = () => {
     return (
-        <AutoTransferForm />
+        <AutoTransferForm autoTransfer={null} />
     )
 }
 

@@ -2,6 +2,7 @@ package com.hbbank.backend.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,8 +38,6 @@ public class AutoTransferService {
 
         Account fromAccount = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("출금 계좌를 찾을 수 없습니다."));
-        Account toAccount = accountRepository.findByAccountNumber(dto.getToAccountNumber())
-                .orElseThrow(() -> new IllegalArgumentException("입금 계좌를 찾을 수 없습니다."));
 
         if (!encoder.matches(dto.getPassword(), fromAccount.getPassword())) {
             log.error("자동이체 등록 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
@@ -46,6 +45,7 @@ public class AutoTransferService {
         }
 
         AutoTransfer autoTransfer = AutoTransfer.builder()
+                .user(fromAccount.getUser())
                 .fromAccount(fromAccount)
                 .toAccountNumber(dto.getToAccountNumber())
                 .amount(dto.getAmount())
@@ -63,6 +63,33 @@ public class AutoTransferService {
                 savedTransfer.getId(), dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
 
         return savedTransfer;
+    }
+
+    // 자동 이체 조회
+    public Optional<AutoTransfer> findById(Long autoTransferId) {
+        return autoTransferRepository.findById(autoTransferId);
+    }
+
+    // 자동 이체 목록 조회
+    public Optional<List<AutoTransfer>> findAllByUserId(Long userId) {
+        return autoTransferRepository.findAllByUserId(userId);
+    }
+
+    // 자동 이체 수정
+    public Optional<AutoTransfer> update(Long id, AutoTransferRequestDTO dto) {
+        AutoTransfer autoTransfer = autoTransferRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 자동이체를 찾을 수 없습니다."));
+
+        Account fromAccount = accountRepository.findByIdWithUser(dto.getFromAccountId())
+                .orElseThrow(() -> new IllegalArgumentException("출금 계좌를 찾을 수 없습니다."));
+
+        if (!encoder.matches(dto.getPassword(), fromAccount.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        autoTransfer.update(fromAccount, dto);
+
+        return Optional.of(autoTransferRepository.save(autoTransfer));
     }
 
     // 매일 00:00 에 자동 이체 실행

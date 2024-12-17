@@ -1,12 +1,42 @@
 import { useForm } from 'react-hook-form';
-import { AutoTransferRequestDTO } from '../../atoms/transfer';
+import { AutoTransferRequestDTO, AutoTransferResponseDTO } from '../../atoms/transfer';
 import { useTransfer } from '../../hooks/useTransfer';
 import { useAccounts } from '../../hooks/useAccounts';
+import { useEffect } from 'react';
 
-const AutoTransferForm = () => {
+const AutoTransferForm = ({ autoTransfer }: { autoTransfer: AutoTransferResponseDTO | null }) => {
     const { accounts } = useAccounts();
-    const { autoTransfer, updateAutoTransferRequest } = useTransfer();
-    const { register, handleSubmit, formState: { errors }, watch } = useForm<AutoTransferRequestDTO>();
+    const { registerAutoTransfer, updateAutoTransferRequest, updateAutoTransfer } = useTransfer();
+    const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<AutoTransferRequestDTO>();
+    const isEdit = autoTransfer !== null;
+
+    useEffect(() => {
+        if (autoTransfer) {
+            reset({
+                fromAccountId: autoTransfer.fromAccountId,
+                toAccountNumber: autoTransfer.toAccountNumber,
+                amount: autoTransfer.amount,
+                description: autoTransfer.description,
+                transferDay: autoTransfer.transferDay,
+                startDate: autoTransfer.startDate,
+                endDate: autoTransfer.endDate
+            });
+        }
+    }, [autoTransfer, reset]);
+
+    useEffect(() => {
+        if(autoTransfer) {
+            updateAutoTransferRequest({
+                fromAccountId: autoTransfer.fromAccountId,
+                toAccountNumber: autoTransfer.toAccountNumber,
+                amount: autoTransfer.amount,
+                description: autoTransfer.description,
+                transferDay: autoTransfer.transferDay,
+                startDate: autoTransfer.startDate,
+                endDate: autoTransfer.endDate
+            });
+        }
+    }, [autoTransfer]);
 
     const startDate = watch('startDate');
     const fromAccountId = watch('fromAccountId');
@@ -26,7 +56,7 @@ const AutoTransferForm = () => {
                     <select
                         {...register('fromAccountId', { required: '출금 계좌를 선택해주세요' })}
                         onChange={(e) => {
-                            const selectedAccount = accounts.find(acc => acc.accountNumber === e.target.value);
+                            const selectedAccount = accounts.find(acc => acc.id === Number(e.target.value));
                             if (selectedAccount) {
                                 updateAutoTransferRequest({ fromAccountId: selectedAccount.id });
                             }
@@ -35,7 +65,7 @@ const AutoTransferForm = () => {
                     >
                         <option value="">어떤 계좌에서 보낼까요?</option>
                         {accounts.map((account) => (
-                            <option key={account.accountNumber} value={account.accountNumber}>
+                            <option key={account.accountNumber} value={account.id}>
                                 {account.accountName} • {account.accountNumber}
                             </option>
                         ))}
@@ -112,7 +142,7 @@ const AutoTransferForm = () => {
                     <div className="flex-1">
                         <input
                             type="date"
-                            {...register('endDate', { 
+                            {...register('endDate', {
                                 required: '종료일을 선택해주세요',
                                 validate: value => !startDate || value >= startDate || '종료일은 시작일 이후여야 합니다'
                             })}
@@ -138,7 +168,7 @@ const AutoTransferForm = () => {
             </div>
 
             <button
-                onClick={handleSubmit(autoTransfer)}
+                onClick={handleSubmit(isEdit ? () => updateAutoTransfer(autoTransfer.id) : registerAutoTransfer)}
                 className="w-full py-4 px-5 mt-8 bg-blue-500 text-white text-lg font-semibold rounded-2xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 ease-in-out shadow-lg shadow-blue-500/30"
             >
                 자동이체 시작하기

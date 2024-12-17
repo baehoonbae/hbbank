@@ -8,6 +8,7 @@ export interface TransferRequestDTO {
 }
 
 export interface AutoTransferRequestDTO {
+    userId: number;
     fromAccountId: number;
     toAccountNumber: string;
     amount: number;
@@ -16,6 +17,18 @@ export interface AutoTransferRequestDTO {
     startDate: string;
     endDate: string;
     password: string;
+}
+
+export interface AutoTransferResponseDTO {
+    id: number;
+    fromAccountId: number;
+    toAccountNumber: string;
+    amount: number;
+    description: string;
+    transferDay: number;
+    nextTransferDate: string;
+    startDate: string;
+    endDate: string;
 }
 
 export const transferRequestState = atom<TransferRequestDTO>({
@@ -31,6 +44,7 @@ export const transferRequestState = atom<TransferRequestDTO>({
 export const autoTransferRequestState = atom<AutoTransferRequestDTO>({
     key: 'autoTransferRequestState',
     default: {
+        userId: 0,
         fromAccountId: 0,
         toAccountNumber: '',
         amount: 0,
@@ -40,4 +54,9 @@ export const autoTransferRequestState = atom<AutoTransferRequestDTO>({
         endDate: '',
         password: ''
     }
+});
+
+export const autoTransferListState = atom<AutoTransferResponseDTO[]>({
+    key: 'autoTransferListState',
+    default: []
 });

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.hbbank.backend.domain.enums.AutoTransferStatus;
+import com.hbbank.backend.dto.AutoTransferRequestDTO;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,6 +38,11 @@ public class AutoTransfer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;                                   // 자동이체 고유 식별자
+
+    @NotNull(message = "사용자 ID는 필수입니다")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;                                // 자동이체 등록 사용자
 
     @NotNull(message = "출금 계좌는 필수입니다")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -75,6 +81,19 @@ public class AutoTransfer {
     @NotNull(message = "실패 횟수는 필수입니다")
     @Min(value = 0, message = "실패 횟수는 0 이상이어야 합니다")
     private int failureCount;                         // 자동이체 실패 횟수 - 재시도 정책에 사용
+
+    public void update(Account fromAccount, AutoTransferRequestDTO dto) {
+        this.fromAccount = fromAccount;
+        this.toAccountNumber = dto.getToAccountNumber();
+        this.amount = dto.getAmount();
+        this.description = dto.getDescription();
+        this.transferDay = dto.getTransferDay();
+        this.startDate = dto.getStartDate();
+        this.endDate = dto.getEndDate();
+        this.nextTransferDate = dto.getStartDate().withDayOfMonth(dto.getTransferDay());
+        this.status = AutoTransferStatus.ACTIVE;
+        this.user = fromAccount.getUser();
+    }
 
     public void updateNextTransferDate() {            // 다음 자동이체 실행일을 한 달 뒤로 업데이트
         this.nextTransferDate = this.nextTransferDate.plusMonths(1)
