@@ -81,6 +81,18 @@ public class AutoTransfer {
                 .withDayOfMonth(this.transferDay);
     }
 
+    public void increaseFailureCount() {
+        this.failureCount++;
+    }
+
+    public void setStatusPaused() {
+        this.status = AutoTransferStatus.PAUSED;
+    }
+
+    public void setStatusCompleted() {
+        this.status = AutoTransferStatus.COMPLETED;
+    }
+
     public boolean isExpired() {                      // 자동이체 만료 여부 확인
         return endDate != null && LocalDate.now().isAfter(endDate);
     }

@@ -18,4 +18,9 @@ public interface AutoTransferRepository extends JpaRepository<AutoTransfer, Long
             @Param("date") LocalDate date,
             @Param("status") AutoTransferStatus status);
 
+    public Optional<List<AutoTransfer>> findAllByEndDateAndStatus(
+            @Param("date") LocalDate date,
+            @Param("status") AutoTransferStatus status);
+
+
 }

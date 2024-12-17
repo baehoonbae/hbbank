@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.Transaction;
+import com.hbbank.backend.dto.AutoTransferExecuteDTO;
 import com.hbbank.backend.dto.TransferRequestDTO;
 import com.hbbank.backend.exception.InvalidPasswordException;
 import com.hbbank.backend.repository.AccountRepository;
@@ -80,6 +81,9 @@ public class TransferService {
      * 
      */
     public boolean executeTransfer(TransferRequestDTO dto) {
+        log.info("이체 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
+
         String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"))
                 .getAccountNumber();
@@ -102,6 +106,7 @@ public class TransferService {
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(dto.getPassword(), fromAccount.getPassword())) {
+            log.error("이체 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
             throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
         }
 
@@ -116,10 +121,58 @@ public class TransferService {
         accountRepository.saveAndFlush(fromAccount);
         accountRepository.saveAndFlush(toAccount);
 
+        log.info("이체 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
+
+        return true;
+    }
+
+    // 자동 이체용
+    public boolean executeTransfer(AutoTransferExecuteDTO dto) {
+        log.info("자동이체 실행 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
+
+        String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
+                .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"))
+                .getAccountNumber();
+        String toAccountNumber = dto.getToAccountNumber();
+
+        Account fromAccount, toAccount;
+
+        // 계좌번호 오름차순으로 락 획득
+        if (fromAccountNumber.compareTo(toAccountNumber) < 0) {
+            fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
+                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
+            toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
+                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
+        } else {
+            toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
+                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
+            fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
+                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
+        }
+
+        // 이체 실행
+        fromAccount.withdraw(dto.getAmount());
+        toAccount.deposit(dto.getAmount());
+
+        // 거래내역 생성
+        createTransaction(fromAccount, toAccount, dto.getAmount());
+
+        // 변경사항 저장
+        accountRepository.saveAndFlush(fromAccount);
+        accountRepository.saveAndFlush(toAccount);
+
+        log.info("자동이체 실행 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
+
         return true;
     }
 
     private void createTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
+        log.debug("거래내역 생성 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            fromAccount.getId(), toAccount.getId(), amount);
+
         Transaction withdrawTransaction = Transaction.builder()
                 .account(fromAccount)
                 .transactionDateTime(LocalDateTime.now())
@@ -145,6 +198,9 @@ public class TransferService {
         transactionRepository.save(withdrawTransaction);
         transactionRepository.save(depositTransaction);
         transactionRepository.flush();
+
+        log.debug("거래내역 생성 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+            fromAccount.getId(), toAccount.getId(), amount);
     }
 
 }
