@@ -36,13 +36,9 @@ public class AccountController {
     public ResponseEntity<?> getAccountTypes() {
         Optional<List<AccountType>> accountTypes = accountService.getAccountTypes();
         if (accountTypes.isPresent()) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(accountTypes.get());
+            return ResponseEntity.ok(accountTypes.get());
         }
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("계좌 타입 가져오기 실패");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("계좌 타입 가져오기 실패");
     }
 
     // 계좌 개설
@@ -50,49 +46,42 @@ public class AccountController {
     public ResponseEntity<?> createAccount(@Valid @RequestBody AccountCreateDTO request) {
         Account registeredAccount = accountService.createAccount(request);
         if (registeredAccount != null) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(registeredAccount);
+            return ResponseEntity.ok(registeredAccount);
         }
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("계좌 개설 실패");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("계좌 개설 실패");
     }
 
     // 특정 유저 pk 값으로 계좌 목록 조회
     @GetMapping("/accounts/{userId}")
     public ResponseEntity<?> getAccounts(@PathVariable Long userId) {
-        Optional<List<Account>> accounts = accountService.findAllByUser_Id(userId);
-        if (accounts.isPresent() && !accounts.isEmpty()) {
-            List<AccountResponseDTO> accountDTOs = accounts.get().stream()
-                    .map(AccountResponseDTO::from)
-                    .collect(Collectors.toList());
+        List<Account> list = accountService.findAllByUser_Id(userId)
+                .orElseThrow(() -> new IllegalArgumentException("계좌 목록을 찾을 수 없습니다."));
 
-            return ResponseEntity.ok(accountDTOs);
-        }
-        return ResponseEntity.notFound().build();
+        List<AccountResponseDTO> dtos = list.stream()
+                .map(AccountResponseDTO::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
 
     // 계좌 pk로 특정 계좌 조회
     @GetMapping("/{id}")
     public ResponseEntity<?> getAccount(@PathVariable Long id) {
-        Optional<Account> opAccount = accountService.findById(id);
-        if (opAccount.isPresent() && !opAccount.isEmpty()) {
-            AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());
-            return ResponseEntity.ok(accountDTO);
-        }
-        return ResponseEntity.notFound().build();
+        Account account = accountService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("계좌를 찾을 수 없습니다."));
+                
+        AccountResponseDTO accountDTO = AccountResponseDTO.from(account);
+        return ResponseEntity.ok(accountDTO);
     }
 
     // 계좌 번호로 특정 계좌 조회
     @GetMapping("/number/{accountNumber}")
     public ResponseEntity<?> getAccount(@PathVariable String accountNumber) {
-        Optional<Account> opAccount = accountService.findByAccountNumber(accountNumber);
-        if (opAccount.isPresent() && !opAccount.isEmpty()) {
-            AccountResponseDTO accountDTO = AccountResponseDTO.from(opAccount.get());
-            return ResponseEntity.ok(accountDTO);
-        }
-        return ResponseEntity.notFound().build();
+        Account account = accountService.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("계좌를 찾을 수 없습니다."));
+
+        AccountResponseDTO accountDTO = AccountResponseDTO.from(account);
+        return ResponseEntity.ok(accountDTO);
     }
 
 }

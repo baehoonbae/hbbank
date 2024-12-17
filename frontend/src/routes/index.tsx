@@ -1,20 +1,22 @@
-import { RouteObject } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
+import { Navigate, RouteObject } from 'react-router-dom';
 
 // 페이지 컴포넌트들
+import AccountDetailPage from '../pages/AccountDetailPage';
 import AccountListPage from '../pages/AccountListPage';
+import AutoTransferPage from '../pages/AutoTransferPage';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
-import SignUpPage from '../pages/SignUpPage';
+import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
+import ReserveTransferPage from '../pages/ReserveTransferPage';
 import TransactionPage from '../pages/TransactionPage';
 import TransferPage from '../pages/TransferPage';
-import CreateAccountPage from '../pages/CreateAccountPage';
-import AccountDetailPage from '../pages/AccountDetailPage';
 import UserDashBoard from '../pages/UserDashBoard';
-import AutoTransferPage from '../pages/AutoTransferPage';
-import ReserveTransferPage from '../pages/ReserveTransferPage';
-import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
+import AutoTransferManagePage from '../pages/AutoTransferManagePage';
+import SignUpPage from '../pages/SignUpPage';
+import CreateAccountPage from '../pages/CreateAccountPage';
 import AdditionalInfoPage from '../pages/AdditionalInfoPage';
+import AutoTransferEditPage from '../pages/AutoTransferEditPage';
+import ReserveTransferManagePage from '../pages/ReserveTransferManagePage';
 
 // 인증이 필요한 라우트를 위한 컴포넌트
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -54,8 +56,20 @@ export const routes: RouteObject[] = [
         element: <PrivateRoute><AutoTransferPage /></PrivateRoute>
     },
     {
+        path: '/auto-transfer/manage',
+        element: <PrivateRoute><AutoTransferManagePage /></PrivateRoute>
+    },
+    {
+        path: '/auto-transfer/edit/:id',
+        element: <PrivateRoute><AutoTransferEditPage /></PrivateRoute>
+    },
+    {
         path: '/reserve-transfer',
         element: <PrivateRoute><ReserveTransferPage /></PrivateRoute>
+    },
+    {
+        path: '/reserve-transfer/manage',
+        element: <PrivateRoute><ReserveTransferManagePage /></PrivateRoute>
     },
     {
         path: '/account-list',
@@ -76,7 +90,7 @@ export const routes: RouteObject[] = [
     {
         path: '/oauth2/redirect',
         element: <OAuth2RedirectPage />
-    },  
+    },
     {
         path: '/oauth2/additional-info',
         element: <AdditionalInfoPage />

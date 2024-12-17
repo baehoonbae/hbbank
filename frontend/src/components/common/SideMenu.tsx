@@ -14,6 +14,17 @@ const SideMenu = () => {
         }
     }, [isAuthenticated]);
 
+    const menuItems = [
+        { path: isAuthenticated ? '/user-dashboard' : '/', icon: HomeIcon, text: '홈' },
+        { path: '/create-account', icon: PlusIcon, text: '계좌 개설' },
+        { path: '/transfer', icon: BanknotesIcon, text: '즉시이체' },
+        { path: '/auto-transfer', icon: ArrowPathIcon, text: '자동이체' },
+        { path: '/auto-transfer/manage', icon: ClockIcon, text: '자동이체관리' },
+        { path: '/reserve-transfer', icon: ClockIcon, text: '예약이체' },
+        { path: '/reserve-transfer/manage', icon: ClockIcon, text: '예약이체관리' },
+        { path: '/transaction', icon: ClockIcon, text: '거래내역' }
+    ];
+
     return (
         <>
             <div className="fixed left-0 top-0 h-screen w-64 bg-[#191F28] text-white">
@@ -21,49 +32,19 @@ const SideMenu = () => {
                     <h1 className="text-3xl font-extrabold text-white mb-12 tracking-tight">HB</h1>
 
                     <nav className="space-y-6">
-                        <button
-                            onClick={() => isAuthenticated ? navigate('/user-dashboard') : navigate('/')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <HomeIcon className="w-6 h-6" />
-                            <span className="font-medium">홈</span>
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/create-account')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <PlusIcon className="w-6 h-6" />
-                            <span className="font-medium">계좌 개설</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/transfer')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <BanknotesIcon className="w-6 h-6" />
-                            <span className="font-medium">즉시이체</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/auto-transfer')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <ArrowPathIcon className="w-6 h-6" />
-                            <span className="font-medium">자동이체</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/reserve-transfer')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <ClockIcon className="w-6 h-6" />
-                            <span className="font-medium">예약이체</span>
-                        </button>
-                        <button
-                            onClick={() => navigate('/transaction')}
-                            className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
-                        >
-                            <ClockIcon className="w-6 h-6" />
-                            <span className="font-medium">거래내역</span>
-                        </button>
+                        {menuItems.map((item, index) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => navigate(item.path)}
+                                    className="w-full flex items-center space-x-4 py-3 px-4 rounded-xl hover:bg-[#2D3540] transition-all duration-200"
+                                >
+                                    <Icon className="w-6 h-6" />
+                                    <span className="font-medium">{item.text}</span>
+                                </button>
+                            );
+                        })}
                     </nav>
                 </div>
 
