@@ -1,9 +1,9 @@
 package com.hbbank.backend.controller;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hbbank.backend.domain.Transaction;
 import com.hbbank.backend.dto.TransactionResponseDTO;
@@ -25,36 +26,29 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionController {
+
     private final TransactionService transactionService;
 
     // 특정 계좌 거래내역 전체 조회
     @GetMapping("/transactions/{accountId}")
     public ResponseEntity<?> findAllByAccount_id(@PathVariable Long accountId) {
-        Optional<List<Transaction>> opTransactions = transactionService
-                .findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
-
-        if (opTransactions.isPresent()) {
-            List<TransactionResponseDTO> dtos = opTransactions.get().stream()
-                    .map(TransactionResponseDTO::from)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(dtos);
-        }
-        return ResponseEntity.notFound().build();
+        List<Transaction> t = transactionService
+                .findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
+        List<TransactionResponseDTO> dtos = t.stream()
+                .map(TransactionResponseDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     // 검색 조건으로 거래내역 조회
     @PostMapping("/transactions/search")
     public ResponseEntity<?> findAllByCondition(@RequestBody TransactionSearchDTO dto) {
-        Optional<List<Transaction>> opTransactions = transactionService.findAllByCondition(dto);
-
-        if (opTransactions.isPresent()) {
-            List<TransactionResponseDTO> dtos = opTransactions.get().stream()
-                    .map(TransactionResponseDTO::from)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(dtos);
-        }
-        return ResponseEntity.notFound().build();
+        List<Transaction> t = transactionService.findAllByCondition(dto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
+        List<TransactionResponseDTO> dtos = t.stream()
+                .map(TransactionResponseDTO::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 }

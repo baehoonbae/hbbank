@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hbbank.backend.domain.AutoTransfer;
 import com.hbbank.backend.dto.AutoTransferRequestDTO;
 import com.hbbank.backend.dto.AutoTransferResponseDTO;
-import com.hbbank.backend.repository.AutoTransferRepository;
 import com.hbbank.backend.service.AutoTransferService;
 
 import jakarta.validation.Valid;
@@ -34,9 +34,9 @@ public class AutoTransferController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody AutoTransferRequestDTO dto) {
-        AutoTransfer registeredTransfer = autoTransferService.register(dto);
-        if (registeredTransfer != null) {
-            return ResponseEntity.ok(registeredTransfer);
+        AutoTransfer t = autoTransferService.register(dto);
+        if (t != null) {
+            return ResponseEntity.ok(AutoTransferResponseDTO.from(t));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("자동 이체 등록 실패");
     }
@@ -44,7 +44,7 @@ public class AutoTransferController {
     @GetMapping("/{autoTransferId}")
     public ResponseEntity<?> findById(@PathVariable Long autoTransferId) {
         AutoTransfer at = autoTransferService.findById(autoTransferId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 자동 이체를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 자동 이체를 찾을 수 없습니다."));
 
         AutoTransferResponseDTO dto = AutoTransferResponseDTO.from(at);
         return ResponseEntity.ok(dto);
@@ -53,26 +53,25 @@ public class AutoTransferController {
     @GetMapping("/list/{userId}")
     public ResponseEntity<?> findAllByUserId(@PathVariable Long userId) {
         List<AutoTransfer> atlist = autoTransferService.findAllByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("자동 이체 목록을 찾을 수 없습니다."));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "자동 이체 목록을 찾을 수 없습니다."));
         List<AutoTransferResponseDTO> dtos = atlist.stream()
                 .map(AutoTransferResponseDTO::from)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(dtos);
     }
 
     @PutMapping("/{autoTransferId}")
     public ResponseEntity<?> updateAutoTransfer(@PathVariable Long autoTransferId, @Valid @RequestBody AutoTransferRequestDTO dto) {
         AutoTransfer updated = autoTransferService.update(autoTransferId, dto)
-                .orElseThrow(() -> new IllegalArgumentException("자동 이체 수정에 실패했습니다."));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "자동 이체 수정에 실패했습니다."));
         return ResponseEntity.ok(AutoTransferResponseDTO.from(updated));
     }
 
     @DeleteMapping("/{autoTransferId}")
     public ResponseEntity<?> deleteAutoTransfer(@PathVariable Long autoTransferId) {
-
-        return ResponseEntity.ok("");
+        AutoTransfer at = autoTransferService.findById(autoTransferId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 자동 이체입니다."));
+        autoTransferService.delete(at);
+        return ResponseEntity.ok("자동이체가 성공적으로 삭제되었습니다.");
     }
 }

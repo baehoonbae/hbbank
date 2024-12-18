@@ -56,13 +56,7 @@ public class UserController {
         User user = userService.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
 
-        return ResponseEntity.ok()
-                .body(new LoginResponseDTO(
-                        token,
-                        user.getId(),
-                        user.getUsername(),
-                        user.getName(),
-                        "로그인 성공!"));
+        return ResponseEntity.ok(new LoginResponseDTO(token, user.getId(), user.getUsername(), user.getName(), "로그인 성공!"));
     }
 
     // 회원가입
@@ -73,8 +67,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "회원가입이 완료되었습니다."));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", "회원가입에 실패했습니다."));
+        return ResponseEntity.badRequest().body(Map.of("message", "회원가입에 실패했습니다."));
     }
 
     // 로그인
@@ -143,13 +136,10 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String bearerToken) {
         log.info("bearerToken: {}", bearerToken);
-        try {
-            String token = bearerToken.substring(7); // "Bearer " 제거
-            Long userId = jwtUtil.getUserId(token);
-            tokenService.revokeRefreshToken(userId);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("서버 오류 발생");
-        }
+
+        String token = bearerToken.substring(7); // "Bearer " 제거
+        Long userId = jwtUtil.getUserId(token);
+        tokenService.revokeRefreshToken(userId);
 
         ResponseCookie clear = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
@@ -175,13 +165,10 @@ public class UserController {
 
     // 인증 코드 확인
     @PostMapping("/email/verify")
-    public ResponseEntity<?> verifyEmail(
-            @RequestParam String email,
-            @RequestParam String code) {
+    public ResponseEntity<?> verifyEmail(@RequestParam String email, @RequestParam String code) {
         if (emailService.verifyEmail(email, code)) {
             userService.completeEmailVerification(email);
-            return ResponseEntity.ok()
-                    .body(Map.of("message", "이메일 인증이 완료되었습니다."));
+            return ResponseEntity.ok(Map.of("message", "이메일 인증이 완료되었습니다."));
         }
         return ResponseEntity.badRequest()
                 .body(Map.of("message", "잘못된 인증 코드입니다."));
@@ -193,12 +180,10 @@ public class UserController {
             @Valid @RequestBody OAuth2AdditionalInfoDTO dto
     ) {
         try {
-            User updatedUser = userService.updateAdditionalInfo(userId, dto);
-            return ResponseEntity.ok()
-                    .body(Map.of("message", "추가 정보가 성공적으로 저장되었습니다."));
+            userService.updateAdditionalInfo(userId, dto);
+            return ResponseEntity.ok(Map.of("message", "추가 정보가 성공적으로 저장되었습니다."));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "추가 정보 저장에 실패했습니다."));
+            return ResponseEntity.badRequest().body(Map.of("message", "추가 정보 저장에 실패했습니다."));
         }
     }
 }

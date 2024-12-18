@@ -42,7 +42,7 @@ export const useTransfer = () => {
                 }
             });
             alert('자동이체가 등록되었습니다.');
-            navigate('/');
+            navigate('/auto-transfer/manage');
             return true;
         } catch (error) {
             console.error('자동이체 실패:', error);

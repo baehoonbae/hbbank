@@ -92,7 +92,12 @@ public class AutoTransferService {
         return Optional.of(autoTransferRepository.save(autoTransfer));
     }
 
-    // 매일 00:00 에 자동 이체 실행
+    // 자동 이체 삭제
+    public void delete(AutoTransfer at) {
+        autoTransferRepository.delete(at);
+    }
+
+    // 자동 이체 실행(매일 00:00)
     // 매일매일 해당 날짜에 startDate가 해당하는 모든 자동 이체 내역들에 대해 00:00 에 실행
     // 성능 및 정합성 테스트 필수!!!!!(대량의 자동 이체 내역 확인 필요하기 때문)
     @Scheduled(cron = "0 0 0 * * *")
@@ -138,7 +143,8 @@ public class AutoTransferService {
         log.info("자동이체 실행 완료 - 총 {}건 중 성공: {}건, 실패: {}건", totalCount, successCount, failCount);
     }
 
-    // 자동 이체 만료
+    // 자동 이체 만료(매일 00:00)
+    // 마찬가지로 성능/정합성 테스트 필수
     @Scheduled(cron = "0 0 0 * * *")
     public void finishAutoTransfer() {
         LocalDate today = LocalDate.now();
