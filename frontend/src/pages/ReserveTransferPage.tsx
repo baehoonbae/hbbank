@@ -1,7 +1,9 @@
+import ReserveTransferForm from "../components/forms/ReserveTransferForm";
+
 const ReserveTransferPage = () => {
     return (
         <div>
-            <h1>예약이체</h1>
+            <ReserveTransferForm />
         </div>
     )
 }
