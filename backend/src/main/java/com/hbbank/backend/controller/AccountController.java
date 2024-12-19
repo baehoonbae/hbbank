@@ -51,7 +51,7 @@ public class AccountController {
 
     // 특정 유저 pk 값으로 계좌 목록 조회
     @GetMapping("/accounts/{userId}")
-    public ResponseEntity<?> getAccounts(@PathVariable Long userId) {
+    public ResponseEntity<?> getAccounts(@PathVariable("userId") Long userId) {
         List<Account> list = accountService.findAllByUser_Id(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌 목록을 찾을 수 없습니다."));
 
@@ -63,8 +63,8 @@ public class AccountController {
     }
 
     // 계좌 pk로 특정 계좌 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getAccount(@PathVariable Long id) {
+    @GetMapping("/{accountId}")
+    public ResponseEntity<?> getAccount(@PathVariable("accountId") Long id) {
         Account account = accountService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다."));
 
@@ -74,9 +74,9 @@ public class AccountController {
 
     // 계좌 번호로 특정 계좌 조회
     @GetMapping("/number/{accountNumber}")
-    public ResponseEntity<?> getAccount(@PathVariable String accountNumber) {
+    public ResponseEntity<?> getAccount(@PathVariable("accountNumber") String accountNumber) {
         Account account = accountService.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다.")); 
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다."));
 
         AccountResponseDTO accountDTO = AccountResponseDTO.from(account);
         return ResponseEntity.ok(accountDTO);

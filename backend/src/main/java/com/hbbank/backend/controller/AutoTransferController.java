@@ -42,16 +42,15 @@ public class AutoTransferController {
     }
 
     @GetMapping("/{autoTransferId}")
-    public ResponseEntity<?> findById(@PathVariable Long autoTransferId) {
-        AutoTransfer at = autoTransferService.findById(autoTransferId)
+    public ResponseEntity<?> findById(@PathVariable("autoTransferId") Long id) {
+        AutoTransfer at = autoTransferService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 자동 이체를 찾을 수 없습니다."));
-
-        AutoTransferResponseDTO dto = AutoTransferResponseDTO.from(at);
-        return ResponseEntity.ok(dto);
+                
+        return ResponseEntity.ok(AutoTransferResponseDTO.from(at));
     }
 
     @GetMapping("/list/{userId}")
-    public ResponseEntity<?> findAllByUserId(@PathVariable Long userId) {
+    public ResponseEntity<?> findAllByUserId(@PathVariable("userId") Long userId) {
         List<AutoTransfer> atlist = autoTransferService.findAllByUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "자동 이체 목록을 찾을 수 없습니다."));
         List<AutoTransferResponseDTO> dtos = atlist.stream()
@@ -61,15 +60,15 @@ public class AutoTransferController {
     }
 
     @PutMapping("/{autoTransferId}")
-    public ResponseEntity<?> updateAutoTransfer(@PathVariable Long autoTransferId, @Valid @RequestBody AutoTransferRequestDTO dto) {
-        AutoTransfer updated = autoTransferService.update(autoTransferId, dto)
+    public ResponseEntity<?> updateAutoTransfer(@PathVariable("autoTransferId") Long id, @Valid @RequestBody AutoTransferRequestDTO dto) {
+        AutoTransfer updated = autoTransferService.update(id, dto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "자동 이체 수정에 실패했습니다."));
         return ResponseEntity.ok(AutoTransferResponseDTO.from(updated));
     }
 
     @DeleteMapping("/{autoTransferId}")
-    public ResponseEntity<?> deleteAutoTransfer(@PathVariable Long autoTransferId) {
-        AutoTransfer at = autoTransferService.findById(autoTransferId)
+    public ResponseEntity<?> deleteAutoTransfer(@PathVariable("autoTransferId") Long id) {
+        AutoTransfer at = autoTransferService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 자동 이체입니다."));
         autoTransferService.delete(at);
         return ResponseEntity.ok("자동이체가 성공적으로 삭제되었습니다.");

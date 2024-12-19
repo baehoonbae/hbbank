@@ -14,7 +14,7 @@ import com.hbbank.backend.domain.enums.AutoTransferStatus;
 @Repository
 public interface AutoTransferRepository extends JpaRepository<AutoTransfer, Long> {
 
-    public Optional<List<AutoTransfer>> findAllByUserId(Long userId);
+    public Optional<List<AutoTransfer>> findAllByUserIdAndStatus(Long userId, AutoTransferStatus status);
 
     public Optional<List<AutoTransfer>> findAllByNextTransferDateAndStatus(
             @Param("date") LocalDate date,

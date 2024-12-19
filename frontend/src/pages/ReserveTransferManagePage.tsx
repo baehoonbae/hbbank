@@ -1,7 +1,9 @@
+import ReserveTransferList from "../components/transfer/ReserveTransferList";
+
 const ReserveTransferManagePage = () => {
     return (
         <div>
-            <h1>예약이체관리</h1>
+            <ReserveTransferList />
         </div>
     );
 };

@@ -31,9 +31,9 @@ public class TransactionController {
 
     // 특정 계좌 거래내역 전체 조회
     @GetMapping("/transactions/{accountId}")
-    public ResponseEntity<?> findAllByAccount_id(@PathVariable Long accountId) {
+    public ResponseEntity<?> findAllByAccount_id(@PathVariable("accountId") Long id) {
         List<Transaction> t = transactionService
-                .findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId)
+                .findAllByAccount_IdOrderByTransactionDateTimeDesc(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
         List<TransactionResponseDTO> dtos = t.stream()
                 .map(TransactionResponseDTO::from)

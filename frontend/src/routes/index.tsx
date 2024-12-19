@@ -17,6 +17,7 @@ import CreateAccountPage from '../pages/CreateAccountPage';
 import AdditionalInfoPage from '../pages/AdditionalInfoPage';
 import AutoTransferEditPage from '../pages/AutoTransferEditPage';
 import ReserveTransferManagePage from '../pages/ReserveTransferManagePage';
+import ReserveTransferEditPage from '../pages/ReserveTransferEditPage';
 
 // 인증이 필요한 라우트를 위한 컴포넌트
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -70,6 +71,10 @@ export const routes: RouteObject[] = [
     {
         path: '/reserve-transfer/manage',
         element: <PrivateRoute><ReserveTransferManagePage /></PrivateRoute>
+    },
+    {
+        path: '/reserve-transfer/edit/:id',
+        element: <PrivateRoute><ReserveTransferEditPage /></PrivateRoute>
     },
     {
         path: '/account-list',

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.hbbank.backend.domain.enums.ReserveTransferStatus;
+import com.hbbank.backend.dto.ReserveTransferRequestDTO;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -69,6 +70,16 @@ public class ReserveTransfer {
     @NotNull(message = "실패 횟수는 필수입니다")
     @Min(value = 0, message = "실패 횟수는 0 이상이어야 합니다")
     private int failureCount;                         // 이체 실패 횟수 - 재시도 정책에 사용
+
+    public void update(Account fromAccount, ReserveTransferRequestDTO dto) {
+        this.fromAccount = fromAccount;
+        this.toAccountNumber = dto.getToAccountNumber();
+        this.amount = dto.getAmount();
+        this.description = dto.getDescription();
+        this.reservedAt = dto.getReservedAt();
+        this.status = ReserveTransferStatus.PENDING;
+        this.user = fromAccount.getUser();
+    }
 
     // 실패 횟수 증가 메서드
     public void increaseFailureCount() {
