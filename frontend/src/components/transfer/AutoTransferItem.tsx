@@ -1,11 +1,11 @@
 import { AutoTransferResponseDTO } from "../../atoms/transfer";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-import { useTransfer } from "../../hooks/useTransfer";
+import { useAutoTransfer } from "../../hooks/useAutoTransfer";
 
 const AutoTransferItem = ({ autoTransfer }: { autoTransfer: AutoTransferResponseDTO }) => {
     const navigate = useNavigate();
-    const { deleteAutoTransfer } = useTransfer();
+    const { deleteAutoTransfer } = useAutoTransfer();
     if (!autoTransfer) return null;
 
     return (

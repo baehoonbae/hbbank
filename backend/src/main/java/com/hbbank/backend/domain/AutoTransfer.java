@@ -102,6 +102,9 @@ public class AutoTransfer {
 
     public void increaseFailureCount() {
         this.failureCount++;
+        if (this.failureCount >= 3) {
+            this.status = AutoTransferStatus.PAUSED;
+        }
     }
 
     public void setStatusPaused() {

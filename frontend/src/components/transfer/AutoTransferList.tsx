@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useTransfer } from "../../hooks/useTransfer";
 import AutoTransferItem from "./AutoTransferItem";
 import { AutoTransferResponseDTO } from "../../atoms/transfer";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { useAutoTransfer } from "../../hooks/useAutoTransfer";
 
 const AutoTransferList = () => {
     const navigate = useNavigate();
     const [autoTransferList, setAutoTransferList] = useState<AutoTransferResponseDTO[]>([]);
-    const { fetchAutoTransferList } = useTransfer();
+    const { fetchAutoTransferList } = useAutoTransfer();
 
     useEffect(() => {
         fetchAutoTransferList().then(setAutoTransferList);

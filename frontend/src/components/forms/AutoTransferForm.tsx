@@ -1,14 +1,17 @@
 import { useForm } from 'react-hook-form';
 import { AutoTransferRequestDTO, AutoTransferResponseDTO } from '../../atoms/transfer';
-import { useTransfer } from '../../hooks/useTransfer';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useEffect } from 'react';
+import { useAutoTransfer } from '../../hooks/useAutoTransfer';
 
 const AutoTransferForm = ({ autoTransfer }: { autoTransfer: AutoTransferResponseDTO | null }) => {
     const { accounts } = useAccounts();
-    const { registerAutoTransfer, updateAutoTransferRequest, updateAutoTransfer } = useTransfer();
+    const { registerAutoTransfer, updateAutoTransferRequest, updateAutoTransfer } = useAutoTransfer();
     const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<AutoTransferRequestDTO>();
     const isEdit = autoTransfer !== null;
+    const startDate = watch('startDate');
+    const fromAccountId = watch('fromAccountId');
+    const today = new Date().toISOString().split('T')[0];
 
     useEffect(() => {
         if (autoTransfer) {
@@ -37,10 +40,6 @@ const AutoTransferForm = ({ autoTransfer }: { autoTransfer: AutoTransferResponse
             });
         }
     }, [autoTransfer]);
-
-    const startDate = watch('startDate');
-    const fromAccountId = watch('fromAccountId');
-    const today = new Date().toISOString().split('T')[0];
 
     const formatAccountNumber = (accountNumber: string | undefined) => {
         if (!accountNumber) return '';
