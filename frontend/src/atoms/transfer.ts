@@ -1,6 +1,13 @@
 import { atom } from "recoil";
 
+export enum TransferType {
+    INSTANT,
+    AUTO,
+    RESERVE
+}
+
 export interface TransferRequestDTO {
+    type: TransferType;
     fromAccountId: number;
     toAccountNumber: string;
     amount: number;
@@ -54,6 +61,7 @@ export interface ReserveTransferResponseDTO {
 export const transferRequestState = atom<TransferRequestDTO>({
     key: 'transferRequestState',
     default: {
+        type: TransferType.INSTANT,
         fromAccountId: 0,
         toAccountNumber: '',
         amount: 0,
