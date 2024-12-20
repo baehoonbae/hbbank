@@ -32,9 +32,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.hbbank.backend.config.TestConfig;
 import com.hbbank.backend.config.TestDataConfig;
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.Transaction;
+import com.hbbank.backend.domain.enums.TransferType;
 import com.hbbank.backend.dto.TransferRequestDTO;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.TransactionRepository;
@@ -42,7 +44,7 @@ import com.hbbank.backend.repository.TransactionRepository;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 
-@Import(TestDataConfig.class)
+@Import({TestDataConfig.class, TestConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -137,6 +139,7 @@ class TransferServiceTest {
 
         // when
         TransferRequestDTO dto = TransferRequestDTO.builder()
+                .type(TransferType.INSTANT)
                 .fromAccountId(fromAccount.getId())
                 .toAccountNumber(toAccount.getAccountNumber())
                 .amount(transferAmount)
@@ -179,6 +182,7 @@ class TransferServiceTest {
             executorService.submit(() -> {
                 try {
                     TransferRequestDTO dto = TransferRequestDTO.builder()
+                            .type(TransferType.INSTANT)
                             .fromAccountId(sourceAccount.getId())
                             .toAccountNumber(targetAccount.getAccountNumber())
                             .amount(transferAmount)
@@ -255,6 +259,7 @@ class TransferServiceTest {
                 boolean success = transactionTemplate.execute(status -> {
                     try {
                         TransferRequestDTO dto = TransferRequestDTO.builder()
+                                .type(TransferType.INSTANT)
                                 .fromAccountId(accountA.getId())
                                 .toAccountNumber(accountB.getAccountNumber())
                                 .amount(transferAmount)
@@ -375,6 +380,7 @@ class TransferServiceTest {
                 try {
                     startLatch.await();
                     TransferRequestDTO dto = TransferRequestDTO.builder()
+                            .type(TransferType.INSTANT)
                             .fromAccountId(accounts.get(currentIndex).getId())
                             .toAccountNumber(accounts.get((currentIndex + 1) % accounts.size()).getAccountNumber())
                             .amount(transferAmount)

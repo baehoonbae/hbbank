@@ -74,6 +74,7 @@ public class TestDataConfig {
                     .address("서울시 강남구 역삼동")
                     .birth(LocalDate.of(1990, 1, 1))
                     .username("testuser")
+                    .emailVerified(true)
                     .build();
             userRepository.save(testUser);
 
@@ -84,6 +85,8 @@ public class TestDataConfig {
                     .description("테스트용 계좌")
                     .interestRate(1.0)
                     .minimumBalance(0L)
+                    .defaultTransferLimit(new BigDecimal("1000000"))
+                    .defaultDailyTransferLimit(new BigDecimal("5000000"))
                     .build();
             accountTypeRepository.save(testAccountType);
 
