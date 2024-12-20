@@ -63,7 +63,7 @@ public class ReserveTransfer {
     private LocalDateTime reservedAt;                 // 예약된 실행 일시
 
     @Enumerated(EnumType.STRING)
-    private ReserveTransferStatus status;            // 예약이체 상태 (PENDING, COMPLETED, FAILED)
+    private ReserveTransferStatus status;            // 예약이체 상태 (PENDING, COMPLETED, PAUSED)
 
     private LocalDateTime completedAt;                // 실행 완료 일시
 
@@ -85,8 +85,12 @@ public class ReserveTransfer {
     public void increaseFailureCount() {
         this.failureCount++;
         if (this.failureCount >= 3) {  // 예: 3회 실패시 최종 실패 처리
-            this.status = ReserveTransferStatus.FAILED;
+            this.status = ReserveTransferStatus.PAUSED;
         }
+    }
+
+    public void updateStatusCompleted() {
+        this.status = ReserveTransferStatus.COMPLETED;
     }
 
 }

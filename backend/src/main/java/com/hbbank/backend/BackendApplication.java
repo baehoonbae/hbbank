@@ -1,21 +1,25 @@
 package com.hbbank.backend;
 
+import java.math.BigDecimal;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.hbbank.backend.domain.AccountType;
 import com.hbbank.backend.repository.AccountTypeRepository;
 
 @SpringBootApplication
+@EnableScheduling  
 public class BackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 	}
-
+ 
 	@Bean
 	@Profile("!test")
 	public CommandLineRunner initData(AccountTypeRepository accountTypeRepository) {
@@ -27,6 +31,8 @@ public class BackendApplication {
 						.description("수수료 면제 자유입출금통장")
 						.interestRate(0.1)
 						.minimumBalance(0L)
+						.defaultTransferLimit(new BigDecimal("3000000"))
+						.defaultDailyTransferLimit(new BigDecimal("10000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -35,6 +41,8 @@ public class BackendApplication {
 						.description("높은 이자율의 정기예금")
 						.interestRate(4.5)
 						.minimumBalance(100000L)
+						.defaultTransferLimit(new BigDecimal("5000000"))
+						.defaultDailyTransferLimit(new BigDecimal("20000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -43,6 +51,8 @@ public class BackendApplication {
 						.description("만 34세 이하 전용 급여통장")
 						.interestRate(2.8)
 						.minimumBalance(0L)
+						.defaultTransferLimit(new BigDecimal("2000000"))
+						.defaultDailyTransferLimit(new BigDecimal("8000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -51,6 +61,8 @@ public class BackendApplication {
 						.description("입출금액에 따른 포인트 적립")
 						.interestRate(1.2)
 						.minimumBalance(50000L)
+						.defaultTransferLimit(new BigDecimal("3000000"))
+						.defaultDailyTransferLimit(new BigDecimal("15000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -59,6 +71,8 @@ public class BackendApplication {
 						.description("온라인 전용 특별우대통장")
 						.interestRate(2.0)
 						.minimumBalance(0L)
+						.defaultTransferLimit(new BigDecimal("5000000"))
+						.defaultDailyTransferLimit(new BigDecimal("20000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -67,6 +81,8 @@ public class BackendApplication {
 						.description("만 60세 이상 전용 연금통장")
 						.interestRate(3.0)
 						.minimumBalance(10000L)
+						.defaultTransferLimit(new BigDecimal("2000000"))
+						.defaultDailyTransferLimit(new BigDecimal("5000000"))
 						.build());
 
 					accountTypeRepository.save(AccountType.builder()
@@ -75,6 +91,8 @@ public class BackendApplication {
 						.description("사업자 전용 입출금통장")
 						.interestRate(1.5)
 						.minimumBalance(100000L)
+						.defaultTransferLimit(new BigDecimal("10000000"))
+						.defaultDailyTransferLimit(new BigDecimal("50000000"))
 						.build());
 			}
 		};

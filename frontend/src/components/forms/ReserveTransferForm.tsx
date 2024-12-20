@@ -134,7 +134,10 @@ const ReserveTransferForm = ({ reserveTransfer }: { reserveTransfer: ReserveTran
             </div>
 
             <button
-                onClick={handleSubmit(isEdit ? () => updateReserveTransfer(reserveTransfer.id) : registerReserveTransfer)}
+                onClick={handleSubmit(isEdit && reserveTransfer ?
+                    () => updateReserveTransfer(reserveTransfer.id) :
+                    registerReserveTransfer
+                )}
                 className="w-full py-4 px-5 mt-8 bg-blue-500 text-white text-lg font-semibold rounded-2xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 ease-in-out shadow-lg shadow-blue-500/30"
             >
                 예약이체 시작하기

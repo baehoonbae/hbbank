@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.ReserveTransfer;
 import com.hbbank.backend.domain.enums.ReserveTransferStatus;
+import com.hbbank.backend.domain.enums.TransferType;
 import com.hbbank.backend.dto.ReserveTransferRequestDTO;
+import com.hbbank.backend.dto.TransferRequestDTO;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.ReserveTransferRepository;
 
@@ -82,16 +84,31 @@ public class ReserveTransferService {
     }
 
     // 예약 이체 실행(매 분마다)
+    // 테스트 필수
     @Scheduled(cron = "0 * * * * *")
     public void executeReserveTransfers() {
         // 현재 시각 이전의 PENDING 상태인 예약 이체들을 조회
-        List<ReserveTransfer> pendingList = reserveTransferRepository.findAllPendingTransfers(LocalDateTime.now())
+        List<ReserveTransfer> list = reserveTransferRepository.findAllPendingTransfers(LocalDateTime.now())
                 .orElseThrow(() -> new IllegalArgumentException("리스트를 조회할 수 없습니다."));
 
-        for(ReserveTransfer rt:pendingList){
-            // 이체 실행
-            
-            transferService.executeTransfer();
+        for (ReserveTransfer rt : list) {
+            try {
+                boolean success = transferService.executeTransfer(TransferRequestDTO.builder()
+                        .type(TransferType.RESERVE)
+                        .fromAccountId(rt.getFromAccount().getId())
+                        .toAccountNumber(rt.getToAccountNumber())
+                        .amount(rt.getAmount())
+                        .build());
+                if (success) {
+                    rt.updateStatusCompleted();
+                }else{
+                    rt.increaseFailureCount();
+                }
+            } catch (Exception e) {
+                rt.increaseFailureCount();
+            } finally {
+                reserveTransferRepository.save(rt);
+            }
         }
     }
 
