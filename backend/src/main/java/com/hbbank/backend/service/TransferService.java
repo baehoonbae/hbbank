@@ -84,42 +84,71 @@ public class TransferService {
         log.info("이체 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
                 dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
 
+        log.debug("출금계좌 번호 조회 시작");
         String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
-                .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"))
+                .orElseThrow(() -> {
+                    log.error("출금계좌 조회 실패 - 계좌ID: {}", dto.getFromAccountId());
+                    return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                })
                 .getAccountNumber();
         String toAccountNumber = dto.getToAccountNumber();
+        log.debug("계좌번호 조회 완료 - 출금계좌: {}, 입금계좌: {}", fromAccountNumber, toAccountNumber);
 
         Account fromAccount, toAccount;
 
+        log.debug("계좌 락 획득 시작 - 계좌번호 비교: {}", fromAccountNumber.compareTo(toAccountNumber));
         // 계좌번호 오름차순으로 락 획득
         if (fromAccountNumber.compareTo(toAccountNumber) < 0) {
+            log.debug("출금계좌 락 먼저 획득");
             fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
-                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
+                    .orElseThrow(() -> {
+                        log.error("출금계좌 락 획득 실패 - 계좌ID: {}", dto.getFromAccountId());
+                        return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                    });
             toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
-                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
+                    .orElseThrow(() -> {
+                        log.error("입금계좌 락 획득 실패 - 계좌번호: {}", toAccountNumber);
+                        return new RuntimeException("입금 계좌를 찾을 수 없습니다");
+                    });
         } else {
+            log.debug("입금계좌 락 먼저 획득");
             toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
-                    .orElseThrow(() -> new RuntimeException("입금 계좌를 찾을 수 없습니다"));
+                    .orElseThrow(() -> {
+                        log.error("입금계좌 락 획득 실패 - 계좌번호: {}", toAccountNumber);
+                        return new RuntimeException("입금 계좌를 찾을 수 없습니다");
+                    });
             fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
-                    .orElseThrow(() -> new RuntimeException("출금 계좌를 찾을 수 없습니다"));
+                    .orElseThrow(() -> {
+                        log.error("출금계좌 락 획득 실패 - 계좌ID: {}", dto.getFromAccountId());
+                        return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                    });
         }
+        log.debug("계좌 락 획득 완료");
 
         // 비밀번호 검증
+        log.debug("비밀번호 검증 시작 - 이체타입: {}", dto.getType());
         if (dto.getType() == TransferType.INSTANT && !passwordEncoder.matches(dto.getPassword(), fromAccount.getPassword())) {
             log.error("이체 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
             throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
         }
+        log.debug("비밀번호 검증 완료");
 
         // 이체 실행
+        log.debug("이체 실행 시작 - 출금계좌 잔액: {}, 이체금액: {}", fromAccount.getBalance(), dto.getAmount());
         fromAccount.withdraw(dto.getAmount());
         toAccount.deposit(dto.getAmount());
+        log.debug("이체 실행 완료 - 출금계좌 잔액: {}, 입금계좌 잔액: {}", fromAccount.getBalance(), toAccount.getBalance());
 
         // 거래내역 생성
+        log.debug("거래내역 생성 시작");
         createTransaction(fromAccount, toAccount, dto.getAmount());
+        log.debug("거래내역 생성 완료");
 
         // 변경사항 저장
+        log.debug("계좌 정보 저장 시작");
         accountRepository.saveAndFlush(fromAccount);
         accountRepository.saveAndFlush(toAccount);
+        log.debug("계좌 정보 저장 완료");
 
         log.info("이체 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
                 dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
@@ -131,6 +160,7 @@ public class TransferService {
         log.debug("거래내역 생성 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
                 fromAccount.getId(), toAccount.getId(), amount);
 
+        log.debug("출금 거래내역 생성");
         Transaction withdrawTransaction = Transaction.builder()
                 .account(fromAccount)
                 .transactionDateTime(LocalDateTime.now())
@@ -142,6 +172,7 @@ public class TransferService {
                 .balance(fromAccount.getBalance())
                 .build();
 
+        log.debug("입금 거래내역 생성");
         Transaction depositTransaction = Transaction.builder()
                 .account(toAccount)
                 .transactionDateTime(LocalDateTime.now())
@@ -153,9 +184,11 @@ public class TransferService {
                 .balance(toAccount.getBalance())
                 .build();
 
+        log.debug("거래내역 저장 시작");
         transactionRepository.save(withdrawTransaction);
         transactionRepository.save(depositTransaction);
         transactionRepository.flush();
+        log.debug("거래내역 저장 완료");
 
         log.debug("거래내역 생성 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
                 fromAccount.getId(), toAccount.getId(), amount);

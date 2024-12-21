@@ -1,6 +1,7 @@
 package com.hbbank.backend.service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.AutoTransfer;
-import com.hbbank.backend.domain.enums.AutoTransferStatus;
+import com.hbbank.backend.domain.enums.TransferStatus;
 import com.hbbank.backend.domain.enums.TransferType;
 import com.hbbank.backend.dto.AutoTransferRequestDTO;
 import com.hbbank.backend.dto.TransferRequestDTO;
@@ -38,37 +39,26 @@ public class AutoTransferService {
                 dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount(),
                 dto.getTransferDay(), dto.getStartDate(), dto.getEndDate());
 
-        Account fromAccount = accountRepository.findById(dto.getFromAccountId())
+        Account fa = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("자동이체 등록 실패 - 출금계좌 없음 (계좌ID: {})", dto.getFromAccountId());
                     return new IllegalArgumentException("출금 계좌를 찾을 수 없습니다.");
                 });
 
-        if (!encoder.matches(dto.getPassword(), fromAccount.getPassword())) {
+        if (!encoder.matches(dto.getPassword(), fa.getPassword())) {
             log.error("자동이체 등록 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        AutoTransfer autoTransfer = AutoTransfer.builder()
-                .user(fromAccount.getUser())
-                .fromAccount(fromAccount)
-                .toAccountNumber(dto.getToAccountNumber())
-                .amount(dto.getAmount())
-                .description(dto.getDescription())
-                .transferDay(dto.getTransferDay())
-                .nextTransferDate(dto.getStartDate().withDayOfMonth(dto.getTransferDay()))
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
-                .status(AutoTransferStatus.ACTIVE)
-                .failureCount(0)
-                .build();
+        AutoTransfer at = new AutoTransfer();
+        at.update(fa, dto);
 
-        AutoTransfer savedTransfer = autoTransferRepository.save(autoTransfer);
+        AutoTransfer sat = autoTransferRepository.save(at);
         log.info("자동이체 등록 완료 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
-                savedTransfer.getId(), dto.getFromAccountId(), dto.getToAccountNumber(),
+                sat.getId(), dto.getFromAccountId(), dto.getToAccountNumber(),
                 dto.getAmount(), dto.getTransferDay());
 
-        return savedTransfer;
+        return sat;
     }
 
     // 자동 이체 조회
@@ -80,7 +70,7 @@ public class AutoTransferService {
     // 자동 이체 목록 조회
     public Optional<List<AutoTransfer>> findAllByUserId(Long userId) {
         log.debug("자동이체 목록 조회 - 사용자ID: {}", userId);
-        return autoTransferRepository.findAllByUserIdAndStatus(userId, AutoTransferStatus.ACTIVE);
+        return autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }
 
     // 자동 이체 수정
@@ -131,14 +121,19 @@ public class AutoTransferService {
         LocalDate today = LocalDate.now();
         log.info("자동이체 실행 시작: {}", today);
 
-        List<AutoTransfer> list = autoTransferRepository.findAllByNextTransferDateAndStatus(today, AutoTransferStatus.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("리스트를 찾을 수 없습니다."));
+        List<AutoTransfer> list = autoTransferRepository
+                .findAllByNextTransferDateAndStatus(today, TransferStatus.ACTIVE)
+                .orElse(Collections.emptyList());
+
+        log.debug("자동이체 대상 조회 완료 - 총 {}건", list.size());
 
         int totalCount = list.size();
         int successCount = 0;
-        int failCount=0;
+        int failCount = 0;
 
         for (AutoTransfer at : list) {
+            log.debug("자동이체 실행 시도 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}",
+                    at.getId(), at.getFromAccount().getId(), at.getToAccountNumber(), at.getAmount());
             try {
                 boolean success = transferService.executeTransfer(TransferRequestDTO.builder()
                         .type(TransferType.AUTO)
@@ -146,23 +141,23 @@ public class AutoTransferService {
                         .toAccountNumber(at.getToAccountNumber())
                         .amount(at.getAmount())
                         .build());
+                at.updateStatus(success);
                 if (success) {
-                    at.updateNextTransferDate();
                     successCount++;
                     log.info("자동이체 성공 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}",
                             at.getId(), at.getFromAccount().getId(), at.getToAccountNumber(), at.getAmount());
                 } else {
-                    at.increaseFailureCount();
                     failCount++;
-                    log.info("자동이체 실패 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 실패횟수: {}",
-                            at.getId(), at.getFromAccount().getId(), at.getToAccountNumber(), at.getAmount(), at.getFailureCount());
+                    log.warn("자동이체 실패 - ID: {}, 출금계좌: {}", at.getId(), at.getFromAccount().getId());
                 }
             } catch (Exception e) {
                 at.increaseFailureCount();
                 failCount++;
-                log.error("자동이체 실패 - ID: {}, 사유: {}", at.getId(), e.getMessage());
+                log.error("자동이체 실행 중 오류 발생 - ID: {}, 출금계좌: {}, 사유: {}",
+                        at.getId(), at.getFromAccount().getId(), e.getMessage());
             } finally {
                 autoTransferRepository.save(at);
+                log.debug("자동이체 상태 업데이트 완료 - ID: {}, 상태: {}", at.getId(), at.getStatus());
             }
         }
         log.info("자동이체 실행 완료 - 총 {}건 중 성공: {}건, 실패: {}건", totalCount, successCount, failCount);
@@ -175,7 +170,7 @@ public class AutoTransferService {
         LocalDate today = LocalDate.now();
         log.info("자동이체 만료 시작: {}", today);
 
-        List<AutoTransfer> list = autoTransferRepository.findAllByEndDateAndStatus(today, AutoTransferStatus.ACTIVE)
+        List<AutoTransfer> list = autoTransferRepository.findAllByEndDateAndStatus(today, TransferStatus.ACTIVE)
                 .orElseThrow(() -> new IllegalArgumentException("리스트를 찾을 수 없습니다."));
 
         int expiredCount = 0;
@@ -183,7 +178,7 @@ public class AutoTransferService {
         try {
             for (AutoTransfer at : list) {
                 try {
-                    at.setStatusCompleted();
+                    at.setStatus(TransferStatus.COMPLETED);
                     autoTransferRepository.save(at);
                     expiredCount++;
 

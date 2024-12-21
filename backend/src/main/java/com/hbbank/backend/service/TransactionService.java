@@ -22,11 +22,19 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
 
     public Optional<List<Transaction>> findAllByAccount_IdOrderByTransactionDateTimeDesc(Long accountId) {
-        return transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
+        log.debug("계좌 거래내역 조회 시작 - 계좌ID: {}", accountId);
+        Optional<List<Transaction>> transactions = transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
+        log.debug("계좌 거래내역 조회 완료 - 계좌ID: {}, 조회결과: {} 건", accountId, 
+            transactions.map(List::size).orElse(0));
+        return transactions;
     }
 
     public Optional<List<Transaction>> findAllByCondition(TransactionSearchDTO dto) {
-        return transactionRepository.findAllByCondition(dto);
+        log.debug("거래내역 조건 조회 시작 - 조회조건: {}", dto);
+        Optional<List<Transaction>> transactions = transactionRepository.findAllByCondition(dto);
+        log.debug("거래내역 조건 조회 완료 - 조회결과: {} 건", 
+            transactions.map(List::size).orElse(0));
+        return transactions;
     }
 
 }
