@@ -10,13 +10,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.hbbank.backend.domain.ReserveTransfer;
-import com.hbbank.backend.domain.enums.ReserveTransferStatus;
+import com.hbbank.backend.domain.enums.TransferStatus;
 
 @Repository
 public interface ReserveTransferRepository extends JpaRepository<ReserveTransfer, Long> {
 
-    public Optional<List<ReserveTransfer>> findAllByUserIdAndStatus(Long userId, ReserveTransferStatus status);
+    public Optional<List<ReserveTransfer>> findAllByUserIdAndStatus(Long userId, TransferStatus status);
 
-    @Query("select rt from ReserveTransfer rt where rt.reservedAt <= :reservedAt and rt.status='PENDING'")
+    @Query("select rt from ReserveTransfer rt where rt.reservedAt <= :reservedAt and rt.status='ACTIVE'")
     public Optional<List<ReserveTransfer>> findAllPendingTransfers(@Param("reservedAt") LocalDateTime now);
 }

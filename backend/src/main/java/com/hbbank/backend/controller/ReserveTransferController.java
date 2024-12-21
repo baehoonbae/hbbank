@@ -63,10 +63,10 @@ public class ReserveTransferController {
 
     @PutMapping("/{reserveTransferId}")
     public ResponseEntity<?> updateReserveTransfer(@PathVariable("reserveTransferId") Long id, @Valid @RequestBody ReserveTransferRequestDTO dto) {
-        ReserveTransfer updated = reserveTransferService.update(id, dto)
+        ReserveTransfer urt = reserveTransferService.update(id, dto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "예약 이체 수정에 실패했습니다."));
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(ReserveTransferResponseDTO.from(urt));
     }
 
     @DeleteMapping("/{reserveTransferId}")
