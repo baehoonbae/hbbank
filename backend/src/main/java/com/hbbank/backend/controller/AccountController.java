@@ -44,7 +44,7 @@ public class AccountController {
     public ResponseEntity<?> createAccount(@Valid @RequestBody AccountCreateDTO request) {
         Account a = accountService.createAccount(request);
         if (a != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(a);
+            return ResponseEntity.status(HttpStatus.CREATED).body(AccountResponseDTO.from(a));
         }
         return ResponseEntity.badRequest().body("계좌 개설 실패");
     }

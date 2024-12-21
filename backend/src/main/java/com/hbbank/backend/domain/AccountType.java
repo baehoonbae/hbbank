@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Entity
 @Getter
@@ -32,5 +33,11 @@ public class AccountType {
 
     @Column(nullable = false)
     private Long minimumBalance;
+
+    @Column(nullable = false, columnDefinition = "DECIMAL(19,4)")
+    private BigDecimal defaultTransferLimit;      
+
+    @Column(nullable = false, columnDefinition = "DECIMAL(19,4)")
+    private BigDecimal defaultDailyTransferLimit; 
 
 }
