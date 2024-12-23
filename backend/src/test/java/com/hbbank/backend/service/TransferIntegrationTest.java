@@ -44,6 +44,7 @@ import com.hbbank.backend.repository.TransactionRepository;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 
+// 이체 관련 동시성 시나리오 통합 테스트
 @Import({TestDataConfig.class, TestConfig.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
@@ -51,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 // @RequiredArgsConstructor // 스프링 테스트 클래스는 다른 생명주기를 가진다.. Autowired 직접 달기
 @ActiveProfiles("test")
 @Slf4j
-class TransferServiceTest {
+class TransferIntegrationTest {
 
     @Autowired
     private TransferService transferService;

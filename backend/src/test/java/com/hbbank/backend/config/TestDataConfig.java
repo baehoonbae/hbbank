@@ -65,6 +65,18 @@ public class TestDataConfig {
     @Profile("test")
     public CommandLineRunner init() {
         return args -> {
+            // 테스트용 AccountType 생성 및 저장
+            AccountType testAccountType = AccountType.builder()
+                    .code("TEST")
+                    .name("테스트계좌")
+                    .description("테스트용 계좌")
+                    .interestRate(1.0)
+                    .minimumBalance(0L)
+                    .defaultTransferLimit(new BigDecimal("1000000"))
+                    .defaultDailyTransferLimit(new BigDecimal("5000000"))
+                    .build();
+            accountTypeRepository.save(testAccountType);
+
             // 테스트용 User 생성 및 저장
             User testUser = User.builder()
                     .name("테스트유저")
@@ -77,18 +89,6 @@ public class TestDataConfig {
                     .emailVerified(true)
                     .build();
             userRepository.save(testUser);
-
-            // 테스트용 AccountType 생성 및 저장
-            AccountType testAccountType = AccountType.builder()
-                    .code("TEST")
-                    .name("테스트계좌")
-                    .description("테스트용 계좌")
-                    .interestRate(1.0)
-                    .minimumBalance(0L)
-                    .defaultTransferLimit(new BigDecimal("1000000"))
-                    .defaultDailyTransferLimit(new BigDecimal("5000000"))
-                    .build();
-            accountTypeRepository.save(testAccountType);
 
             List<Account> accounts = new ArrayList<>();
             for (int i = 1; i <= ACCOUNT_NUMBER; i++) {
