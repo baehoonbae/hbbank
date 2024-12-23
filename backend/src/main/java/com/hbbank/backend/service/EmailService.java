@@ -1,13 +1,16 @@
 package com.hbbank.backend.service;
 
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +27,7 @@ public class EmailService {
         log.debug("인증 코드 생성 완료: {}", verificationCode);
         
         // Redis에 저장 (5분 유효)
-        redisTemplate.opsForValue()
-            .set("EMAIL:" + email, verificationCode, 5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set("EMAIL:" + email, verificationCode, 5, TimeUnit.MINUTES);
         log.debug("Redis에 인증 코드 저장 완료");
             
         // 이메일 발송
@@ -38,7 +40,7 @@ public class EmailService {
         try {
             mailSender.send(message);
             log.info("이메일 인증 코드 발송 완료 - 이메일: {}", email);
-        } catch (Exception e) {
+        } catch (MailException e) {
             log.error("이메일 발송 실패 - 이메일: {}, 사유: {}", email, e.getMessage());
             throw e;
         }
