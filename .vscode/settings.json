@@ -7,5 +7,6 @@
             "-Dspring.datasource.url=jdbc:mysql://localhost:3306/hbbank_test?serverTimezone=UTC&useUniCode=yes&characterEncoding=UTF-8"
         ]
     },
-    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
+    "java.debug.settings.onBuildFailureProceed": true
 }
