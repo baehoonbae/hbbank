@@ -39,6 +39,8 @@ public class AutoTransferService {
                 dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount(),
                 dto.getTransferDay(), dto.getStartDate(), dto.getEndDate());
 
+        dto.validate();
+        
         Account fa = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("자동이체 등록 실패 - 출금계좌 없음 (계좌ID: {})", dto.getFromAccountId());
@@ -122,7 +124,7 @@ public class AutoTransferService {
         log.info("자동이체 실행 시작: {}", today);
 
         List<AutoTransfer> list = autoTransferRepository
-                .findAllByNextTransferDateAndStatus(today, TransferStatus.ACTIVE)
+                .findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE)
                 .orElse(Collections.emptyList());
 
         log.debug("자동이체 대상 조회 완료 - 총 {}건", list.size());

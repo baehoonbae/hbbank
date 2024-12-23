@@ -37,11 +37,18 @@ public class ReserveTransferService {
         log.info("예약이체 등록 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}, 예약시간: {}",
                 dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount(), dto.getReservedAt());
 
+        dto.validate();
+
         Account fa = accountRepository.findByIdWithUser(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("예약이체 등록 실패 - 출금계좌 없음 (계좌ID: {})", dto.getFromAccountId());
                     return new IllegalArgumentException("해당 계좌를 찾을 수 없습니다.");
                 });
+
+        if (!encoder.matches(dto.getPassword(), fa.getPassword())) {
+            log.error("예약이체 등록 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
 
         ReserveTransfer rt = new ReserveTransfer();
         rt.update(fa, dto);
