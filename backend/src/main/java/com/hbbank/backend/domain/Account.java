@@ -22,11 +22,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,28 +47,21 @@ public class Account {
     @JoinColumn(name = "account_type_code", nullable = false, columnDefinition = "varchar(10)")
     private AccountType accountType;
 
-    @Column(nullable = false)
-    @Size(min = 1, max = 50, message = "계좌명은 1자 이상 50자 이하여야 합니다")
-    @NotBlank(message = "계좌명은 필수입니다")
+    @Column(nullable = false, length = 50)
     private String accountName;
 
     @Column(nullable = false, unique = true, length = 15)
-    @Pattern(regexp = "^[0-9]{15}$", message = "계좌번호는 15자리 숫자여야 합니다")
     private String accountNumber;
 
     @Column(nullable = false, columnDefinition = "DECIMAL(19,4)")
     @ColumnDefault("0")
-    @PositiveOrZero(message = "잔액은 0 이상이어야 합니다")
     private BigDecimal balance;
 
     @Column(nullable = false, columnDefinition = "DOUBLE(4,2)")
     @ColumnDefault("0.0")
-    @PositiveOrZero(message = "이자율은 0 이상이어야 합니다")
-    @Max(value = 100, message = "이자율은 100을 초과할 수 없습니다")
     private Double interestRate;
 
     @Column(nullable = false)
-    @NotBlank(message = "비밀번호는 필수입니다")
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -81,16 +69,13 @@ public class Account {
     private AccountStatus status = AccountStatus.ACTIVE;
 
     @Column(nullable = false)
-    @PositiveOrZero
-    private BigDecimal dailyTransferLimit;    // 일일 이체한도
+    private BigDecimal dailyTransferLimit;
 
     @Column(nullable = false)
-    @PositiveOrZero
-    private BigDecimal transferLimit;         // 1회 이체한도
+    private BigDecimal transferLimit;
 
     @Column(nullable = false)
-    @PositiveOrZero
-    private BigDecimal dailyTransferredAmount; // 당일 이체 누적금액
+    private BigDecimal dailyTransferredAmount;
 
     @PrePersist
     private void setDefaultValues() {
@@ -100,8 +85,6 @@ public class Account {
         this.dailyTransferredAmount = BigDecimal.ZERO;
     }
 
-    // Setter를 쓰지 않기 때문에 Entity 내부에 잔액 관련 메서드만(가장 핵심 필드이기 때문) 정의
-    // BigDecimal은 새로운 객체를 반환하기 때문에 다시 할당시켜줘야한다.
     public void withdraw(BigDecimal amount) {
         validateAccountStatus();
         validateTransferLimit(amount);

@@ -31,6 +31,8 @@ public class TransferRequestDTO {
     @Positive(message = "이체 금액은 0보다 커야 합니다")
     private final BigDecimal amount; // 이체 금액
     
+    @NotBlank(message = "비밀번호는 필수입니다")
+    @Pattern(regexp = "^[0-9]{4}$", message = "비밀번호는 4자리 숫자여야 합니다")
     private final String password; // 출금 계좌 비밀번호
 
 }

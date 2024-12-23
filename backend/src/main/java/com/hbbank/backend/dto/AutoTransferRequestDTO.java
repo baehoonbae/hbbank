@@ -46,4 +46,48 @@ public class AutoTransferRequestDTO {
 
     @NotBlank(message = "비밀번호는 필수입니다")
     private final String password;
+
+    public void validate() {
+        validateTransferDay();
+        validateDateRange();
+        validateAmount();
+    }
+
+    public void validateTransferDay() {
+        if (transferDay < 1) {
+            throw new IllegalArgumentException("이체일은 1일 이상이어야 합니다");
+        }
+
+        // 2월인 경우
+        if (startDate.getMonthValue() == 2) {
+            if (transferDay > 28) {
+                throw new IllegalArgumentException("2월의 이체일은 28일 이하여야 합니다");
+            }
+        } // 4,6,9,11월인 경우 
+        else if (startDate.getMonthValue() == 4
+                || startDate.getMonthValue() == 6
+                || startDate.getMonthValue() == 9
+                || startDate.getMonthValue() == 11) {
+            if (transferDay > 30) {
+                throw new IllegalArgumentException("해당 월의 이체일은 30일 이하여야 합니다");
+            }
+        } // 1,3,5,7,8,10,12월인 경우
+        else {
+            if (transferDay > 31) {
+                throw new IllegalArgumentException("이체일은 31일 이하여야 합니다");
+            }
+        }
+    }
+
+    public void validateDateRange() {
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 앞설 수 없습니다.");
+        }
+    }
+
+    public void validateAmount() {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("이체 금액은 0보다 커야 합니다.");
+        }
+    }
 }

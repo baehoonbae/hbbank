@@ -14,8 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,11 +39,9 @@ public abstract class Transfer {
     protected Account fromAccount;
 
     @Column(nullable = false, length = 15)
-    @Pattern(regexp = "^[0-9]{15}$", message = "계좌번호는 15자리 숫자여야 합니다")
     protected String toAccountNumber;
 
     @Column(nullable = false)
-    @PositiveOrZero
     protected BigDecimal amount;
 
     @Column(length = 100)
@@ -56,7 +52,7 @@ public abstract class Transfer {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
-    protected TransferStatus status;                // 자동이체 상태 (ACTIVE, PAUSED, COMPLETED)
+    protected TransferStatus status;
 
     public void increaseFailureCount() {
         this.failureCount++;

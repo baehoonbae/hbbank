@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import com.hbbank.backend.domain.enums.TransferStatus;
 import com.hbbank.backend.dto.ReserveTransferRequestDTO;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "reserve_transfer")
 public class ReserveTransfer extends Transfer {
 
-    @NotNull(message = "예약 실행일시는 필수입니다")
+    @Column(nullable = false)
     private LocalDateTime reservedAt;                 // 예약된 실행 일시
 
     private LocalDateTime completedAt;                // 실행 완료 일시

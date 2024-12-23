@@ -5,11 +5,9 @@ import java.time.LocalDate;
 import com.hbbank.backend.domain.enums.TransferStatus;
 import com.hbbank.backend.dto.AutoTransferRequestDTO;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,19 +21,17 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "auto_transfer")
 public class AutoTransfer extends Transfer {
 
-    @NotNull(message = "이체일은 필수입니다")
-    @Min(value = 1, message = "이체일은 1일 이상이어야 합니다")
-    @Max(value = 31, message = "이체일은 31일 이하여야 합니다")
-    private int transferDay;                          // 매월 자동이체 실행일 (1-31) (사용자 입력)
+    @Column(nullable = false)
+    private int transferDay;                          // 매월 자동이체 실행일 (1-31)
 
-    @NotNull(message = "다음 이체일은 필수입니다")
-    private LocalDate nextTransferDate;           // 다음 자동이체 실행 예정일
+    @Column(nullable = false)
+    private LocalDate nextTransferDate;              // 다음 자동이체 실행 예정일
 
-    @NotNull(message = "시작일은 필수입니다")
-    private LocalDate startDate;                  // 자동이체 시작일 (사용자 입력)
+    @Column(nullable = false)
+    private LocalDate startDate;                     // 자동이체 시작일
 
-    @NotNull(message = "종료일은 필수입니다")
-    private LocalDate endDate;                    // 자동이체 종료일 (사용자 입력)
+    @Column(nullable = false)
+    private LocalDate endDate;                       // 자동이체 종료일
 
     public void update(Account fromAccount, AutoTransferRequestDTO dto) {
         this.user = fromAccount.getUser();
