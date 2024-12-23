@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -283,6 +284,40 @@ class AutoTransferServiceTest {
         // 다음 이체일이 다음달 15일로 정확히 설정되었는지 검증
         LocalDate expectedNextTransferDate = today.plusMonths(1).withDayOfMonth(15);
         assertEquals(expectedNextTransferDate, autoTransfer.getNextTransferDate());
+    }
+
+    @Test
+    @DisplayName("자동이체 실행 성공 - 다음 해 이체일 업데이트")
+    void executeAutoTransfer_Success_NextYearTransferDateUpdate() {
+        // given
+        Account account = Account.builder()
+                .id(1L)
+                .balance(new BigDecimal("50000"))
+                .build();
+
+        AutoTransfer autoTransfer = AutoTransfer.builder()
+                .id(1L)
+                .fromAccount(account)
+                .toAccountNumber("1234567890")
+                .amount(new BigDecimal("10000"))
+                .status(TransferStatus.ACTIVE)
+                .build();
+
+        // any(LocalDate.class)를 사용하여 날짜 매칭을 느슨하게 함
+        when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(
+                any(LocalDate.class), eq(TransferStatus.ACTIVE)))
+                .thenReturn(Optional.of(List.of(autoTransfer)));
+        
+        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(true);
+
+        // when
+        autoTransferService.executeAutoTransfer();
+
+        // then
+        verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(
+                any(LocalDate.class), eq(TransferStatus.ACTIVE));
+        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(autoTransferRepository).save(any(AutoTransfer.class));
     }
 
     @Test

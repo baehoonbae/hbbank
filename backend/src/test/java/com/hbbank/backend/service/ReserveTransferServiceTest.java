@@ -27,6 +27,7 @@ import com.hbbank.backend.dto.TransferRequestDTO;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.ReserveTransferRepository;
 
+// ReserveTransferService 단위 테스트
 @ExtendWith(MockitoExtension.class)
 class ReserveTransferServiceTest {
 
