@@ -22,23 +22,24 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        log.info("OAuth2 로그인 시작 - Provider: {}", userRequest.getClientRegistration().getRegistrationId());
-        
+        log.info("OAuth2 로그인 요청");
         OAuth2User oauth2User = super.loadUser(userRequest);
-        log.debug("OAuth2 사용자 정보 로드 완료");
-        
+        return processOAuth2User(oauth2User);
+    }
+
+    // 테스트를 위해 분리
+    protected OAuth2User processOAuth2User(OAuth2User oauth2User) {
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
-        log.debug("OAuth2 사용자 정보 - 이메일: {}, 이름: {}", email, name);
         
-        // 사용자 정보로 회원가입 또는 로그인 처리
+        log.info("OAuth2 사용자 정보 - 이메일: {}, 이름: {}", email, name);
+        
         userService.findByEmail(email)
             .orElseGet(() -> {
-                log.info("신규 OAuth2 사용자 등록 - 이메일: {}", email);
+                log.info("신규 OAuth2 사용자 등록");
                 return userService.registOAuth2User(email, name);
             });
             
-        log.info("OAuth2 로그인 완료 - 이메일: {}", email);
         return new DefaultOAuth2User(
             Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
             oauth2User.getAttributes(),
