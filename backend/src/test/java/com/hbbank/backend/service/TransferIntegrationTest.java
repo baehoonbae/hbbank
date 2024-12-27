@@ -1,7 +1,9 @@
 package com.hbbank.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.awaitility.Awaitility.await;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -200,8 +202,14 @@ class TransferIntegrationTest {
         executorService.shutdown();
         executorService.awaitTermination(10, TimeUnit.SECONDS);
 
-        // 트랜잭션이 완전히 커밋될 때까지 잠시 대기
-        Thread.sleep(1000);
+        // Awaitility를 사용하여 트랜잭션 완료 대기
+       await()
+                .atMost(5, TimeUnit.SECONDS)
+                .pollInterval(100, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    Account account = accountRepository.findByIdWithUser(targetAccount.getId()).get();
+                    assertNotNull(account);
+                });
 
         // then
         // 출금계좌들의 잔액 검증(각각 9000원 돼야 함)

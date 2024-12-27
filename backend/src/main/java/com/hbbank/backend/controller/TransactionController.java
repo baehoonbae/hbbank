@@ -20,6 +20,7 @@ import com.hbbank.backend.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.DispatcherServlet;
 
 @RestController
 @RequestMapping("/api/transaction")
@@ -32,13 +33,19 @@ public class TransactionController {
     // 특정 계좌 거래내역 전체 조회
     @GetMapping("/transactions/{accountId}")
     public ResponseEntity<?> findAllByAccount_id(@PathVariable("accountId") Long id) {
-        List<Transaction> t = transactionService
-                .findAllByAccount_IdOrderByTransactionDateTimeDesc(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-        List<TransactionResponseDTO> dtos = t.stream()
-                .map(TransactionResponseDTO::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        try {
+            List<Transaction> t = transactionService
+                    .findAllByAccount_IdOrderByTransactionDateTimeDesc(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
+                    
+            List<TransactionResponseDTO> dtos = t.stream()
+                    .map(TransactionResponseDTO::from)
+                    .toList();
+
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 검색 조건으로 거래내역 조회

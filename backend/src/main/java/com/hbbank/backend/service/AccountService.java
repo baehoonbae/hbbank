@@ -3,6 +3,8 @@ package com.hbbank.backend.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.domain.enums.AccountStatus;
+import com.hbbank.backend.exception.InvalidAccountStatusException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import com.hbbank.backend.util.AccountNumberGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.security.auth.login.AccountNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +70,7 @@ public class AccountService {
                 .build();
 
         Account savedAccount = accountRepository.save(account2);
-        log.info("계좌 생성 완료 - 계좌번호: {}, 계좌유형: {}, 사용자ID: {}", 
+        log.info("계좌 생성 완료 - 계좌번호: {}, 계좌유형: {}, 사용자ID: {}",
                 savedAccount.getAccountNumber(), savedAccount.getAccountType().getCode(), savedAccount.getUser().getId());
 
         return savedAccount;
@@ -92,5 +96,14 @@ public class AccountService {
         log.info("일일 이체 한도 초기화 시작");
         accountRepository.resetAllDailyTransferredAmounts();
         log.info("일일 이체 한도 초기화 완료");
+    }
+
+    public void verifyAccount(Long accountId) throws Exception {
+        Account a = findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("존재하지 않는 계좌입니다."));
+
+        if (!a.getStatus().equals(AccountStatus.ACTIVE)) {
+            throw new InvalidAccountStatusException("");
+        }
     }
 }

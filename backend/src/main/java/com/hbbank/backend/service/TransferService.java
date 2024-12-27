@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TransferService {
 
     private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
+    private final TransactionService transactionService;
     private final PasswordEncoder passwordEncoder;
 
     /*
@@ -141,7 +141,7 @@ public class TransferService {
 
         // 거래내역 생성
         log.debug("거래내역 생성 시작");
-        createTransaction(fromAccount, toAccount, dto.getAmount());
+        transactionService.createTransaction(fromAccount, toAccount, dto.getAmount());
         log.debug("거래내역 생성 완료");
 
         // 변경사항 저장
@@ -156,42 +156,6 @@ public class TransferService {
         return true;
     }
 
-    private void createTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
-        log.debug("거래내역 생성 시작 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
-                fromAccount.getId(), toAccount.getId(), amount);
 
-        log.debug("출금 거래내역 생성");
-        Transaction withdrawTransaction = Transaction.builder()
-                .account(fromAccount)
-                .transactionDateTime(LocalDateTime.now())
-                .transactionType("출금")
-                .sender(fromAccount.getUser().getName())
-                .receiver(toAccount.getUser().getName())
-                .withdrawalAmount(amount)
-                .depositAmount(BigDecimal.ZERO)
-                .balance(fromAccount.getBalance())
-                .build();
-
-        log.debug("입금 거래내역 생성");
-        Transaction depositTransaction = Transaction.builder()
-                .account(toAccount)
-                .transactionDateTime(LocalDateTime.now())
-                .transactionType("입금")
-                .sender(fromAccount.getUser().getName())
-                .receiver(toAccount.getUser().getName())
-                .withdrawalAmount(BigDecimal.ZERO)
-                .depositAmount(amount)
-                .balance(toAccount.getBalance())
-                .build();
-
-        log.debug("거래내역 저장 시작");
-        transactionRepository.save(withdrawTransaction);
-        transactionRepository.save(depositTransaction);
-        transactionRepository.flush();
-        log.debug("거래내역 저장 완료");
-
-        log.debug("거래내역 생성 완료 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
-                fromAccount.getId(), toAccount.getId(), amount);
-    }
 
 }
