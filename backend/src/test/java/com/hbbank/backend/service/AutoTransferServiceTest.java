@@ -236,14 +236,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(true);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(true);
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
     }
 
@@ -271,14 +271,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(true);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(true);
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
 
         // 다음 이체일이 다음달 15일로 정확히 설정되었는지 검증
@@ -308,7 +308,7 @@ class AutoTransferServiceTest {
                 any(LocalDate.class), eq(TransferStatus.ACTIVE)))
                 .thenReturn(Optional.of(List.of(autoTransfer)));
         
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(true);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(true);
 
         // when
         autoTransferService.executeAutoTransfer();
@@ -316,7 +316,7 @@ class AutoTransferServiceTest {
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(
                 any(LocalDate.class), eq(TransferStatus.ACTIVE));
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(any(AutoTransfer.class));
     }
 
@@ -345,14 +345,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(false);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(false);
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
         assertEquals(TransferStatus.ACTIVE, autoTransfer.getStatus());
         assertEquals(1, autoTransfer.getFailureCount());
@@ -383,14 +383,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(false);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(false);
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
         assertEquals(TransferStatus.PAUSED, autoTransfer.getStatus()); // PAUSED 상태로 변경되었는지 확인
         assertEquals(3, autoTransfer.getFailureCount()); // 실패 횟수가 3회가 되었는지 확인
@@ -421,14 +421,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenThrow(new RuntimeException("이체 실패"));
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenThrow(new RuntimeException("이체 실패"));
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
         assertEquals(1, autoTransfer.getFailureCount());
     }
@@ -458,14 +458,14 @@ class AutoTransferServiceTest {
 
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(autoTransfers));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenThrow(new OutofBalanceException("잔액이 부족합니다"));
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenThrow(new OutofBalanceException("잔액이 부족합니다"));
 
         // when
         autoTransferService.executeAutoTransfer();
 
         // then
         verify(autoTransferRepository).findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE);
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(autoTransferRepository).save(autoTransfer);
         assertEquals(1, autoTransfer.getFailureCount());
     }

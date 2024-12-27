@@ -62,20 +62,21 @@ public class ReserveTransferService {
 
     // 특정 예약 이체 조회
     public Optional<ReserveTransfer> findById(Long id) {
-        log.debug("예약이체 조회 - ID: {}", id);
         return reserveTransferRepository.findById(id);
     }
 
     // 예약이체 목록 조회
     public Optional<List<ReserveTransfer>> findAllByUserId(Long userId) {
-        log.debug("사용자의 예약이체 목록 조회 - 사용자ID: {}", userId);
         return reserveTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }
 
     // 예약이체 수정
     public Optional<ReserveTransfer> update(Long id, ReserveTransferRequestDTO dto) {
         log.info("예약이체 수정 시작 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}",
-                id, dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount());
+                id, 
+                dto.getFromAccountId(), 
+                dto.getToAccountNumber(), 
+                dto.getAmount());
 
         ReserveTransfer rt = reserveTransferRepository.findById(id)
                 .orElseThrow(() -> {
@@ -104,7 +105,9 @@ public class ReserveTransferService {
     // 예약이체 삭제
     public void delete(ReserveTransfer rt) {
         log.info("예약이체 삭제 - ID: {}, 출금계좌: {}, 입금계좌: {}",
-                rt.getId(), rt.getFromAccount().getId(), rt.getToAccountNumber());
+                rt.getId(), 
+                rt.getFromAccount().getId(), 
+                rt.getToAccountNumber());
         reserveTransferRepository.delete(rt);
         log.info("예약이체 삭제 완료 - ID: {}", rt.getId());
     }
@@ -119,17 +122,13 @@ public class ReserveTransferService {
         List<ReserveTransfer> list = reserveTransferRepository.findAllPendingTransfers(now)
                 .orElseThrow(() -> new IllegalArgumentException("리스트를 조회할 수 없습니다."));
 
-        log.debug("예약이체 대상 조회 완료 - 총 {}건", list.size());
-
         int totalCount = list.size();
         int successCount = 0;
         int failCount = 0;
 
         for (ReserveTransfer rt : list) {
-            log.debug("예약이체 실행 시도 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}",
-                    rt.getId(), rt.getFromAccount().getId(), rt.getToAccountNumber(), rt.getAmount());
             try {
-                boolean success = transferService.executeTransfer(TransferRequestDTO.builder()
+                boolean success = transferService.transfer(TransferRequestDTO.builder()
                         .type(TransferType.RESERVE)
                         .fromAccountId(rt.getFromAccount().getId())
                         .toAccountNumber(rt.getToAccountNumber())
@@ -152,7 +151,6 @@ public class ReserveTransferService {
                         rt.getId(), rt.getFromAccount().getId(), e.getMessage());
             } finally {
                 reserveTransferRepository.save(rt);
-                log.debug("예약이체 상태 업데이트 완료 - ID: {}, 상태: {}", rt.getId(), rt.getStatus());
             }
         }
         log.info("예약이체 실행 완료 - 총 {}건 중 성공: {}건, 실패: {}건", totalCount, successCount, failCount);

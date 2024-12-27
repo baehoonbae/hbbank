@@ -408,14 +408,14 @@ class ReserveTransferServiceTest {
 
         when(reserveTransferRepository.findAllPendingTransfers(any(LocalDateTime.class)))
                 .thenReturn(Optional.of(Arrays.asList(transfer1, transfer2)));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(true);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(true);
 
         // when
         reserveTransferService.executeReserveTransfers();
 
         // then
         verify(reserveTransferRepository).findAllPendingTransfers(any(LocalDateTime.class));
-        verify(transferService, times(2)).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService, times(2)).transfer(any(TransferRequestDTO.class));
         verify(reserveTransferRepository, times(2)).save(any(ReserveTransfer.class));
         assertEquals(TransferStatus.COMPLETED, transfer1.getStatus());
         assertEquals(TransferStatus.COMPLETED, transfer2.getStatus());
@@ -446,14 +446,14 @@ class ReserveTransferServiceTest {
 
         when(reserveTransferRepository.findAllPendingTransfers(any(LocalDateTime.class)))
                 .thenReturn(Optional.of(List.of(transfer)));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class))).thenReturn(false);
+        when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(false);
 
         // when
         reserveTransferService.executeReserveTransfers();
 
         // then
         verify(reserveTransferRepository).findAllPendingTransfers(any(LocalDateTime.class));
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(reserveTransferRepository).save(transfer);
         assertEquals(TransferStatus.PAUSED, transfer.getStatus());
         assertEquals(3, transfer.getFailureCount());
@@ -484,7 +484,7 @@ class ReserveTransferServiceTest {
 
         when(reserveTransferRepository.findAllPendingTransfers(any(LocalDateTime.class)))
                 .thenReturn(Optional.of(List.of(transfer)));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class)))
+        when(transferService.transfer(any(TransferRequestDTO.class)))
                 .thenThrow(new RuntimeException("이체 실행 중 오류 발생"));
 
         // when
@@ -492,7 +492,7 @@ class ReserveTransferServiceTest {
 
         // then
         verify(reserveTransferRepository).findAllPendingTransfers(any(LocalDateTime.class));
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(reserveTransferRepository).save(transfer);
         assertEquals(1, transfer.getFailureCount());
         assertEquals(TransferStatus.ACTIVE, transfer.getStatus());
@@ -523,7 +523,7 @@ class ReserveTransferServiceTest {
 
         when(reserveTransferRepository.findAllPendingTransfers(any(LocalDateTime.class)))
                 .thenReturn(Optional.of(List.of(transfer)));
-        when(transferService.executeTransfer(any(TransferRequestDTO.class)))
+        when(transferService.transfer(any(TransferRequestDTO.class)))
                 .thenReturn(false);
 
         // when
@@ -531,7 +531,7 @@ class ReserveTransferServiceTest {
 
         // then
         verify(reserveTransferRepository).findAllPendingTransfers(any(LocalDateTime.class));
-        verify(transferService).executeTransfer(any(TransferRequestDTO.class));
+        verify(transferService).transfer(any(TransferRequestDTO.class));
         verify(reserveTransferRepository).save(transfer);
         assertEquals(TransferStatus.ACTIVE, transfer.getStatus());
     }

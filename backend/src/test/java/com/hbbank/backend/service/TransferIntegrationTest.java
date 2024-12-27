@@ -149,7 +149,7 @@ class TransferIntegrationTest {
                 .password("1234")
                 .build();
 
-        transferService.executeTransfer(dto);
+        transferService.transfer(dto);
 
         // then
         Account updatedFromAccount = accountRepository.findByIdWithUser(fromAccount.getId()).get();
@@ -191,7 +191,7 @@ class TransferIntegrationTest {
                             .amount(transferAmount)
                             .password("1234")
                             .build();
-                    transferService.executeTransfer(dto);
+                    transferService.transfer(dto);
                 } finally {
                     latch.countDown();
                 }
@@ -274,7 +274,7 @@ class TransferIntegrationTest {
                                 .amount(transferAmount)
                                 .password("1234")
                                 .build();
-                        return transferService.executeTransfer(dto);
+                        return transferService.transfer(dto);
                     } catch (Exception e) {
                         status.setRollbackOnly();
                         exceptions.add(e);
@@ -304,7 +304,7 @@ class TransferIntegrationTest {
                                 .amount(transferAmount)
                                 .password("1234")
                                 .build();
-                        return transferService.executeTransfer(dto);
+                        return transferService.transfer(dto);
                     } catch (Exception e) {
                         status.setRollbackOnly();
                         exceptions.add(e);
@@ -403,7 +403,7 @@ class TransferIntegrationTest {
                         try {
                             success = transactionTemplate.execute(status -> {
                                 try {
-                                    return transferService.executeTransfer(dto);
+                                    return transferService.transfer(dto);
                                 } catch (Exception e) {
                                     status.setRollbackOnly();
                                     throw e;

@@ -28,7 +28,6 @@ public class EmailService {
         
         // Redis에 저장 (5분 유효)
         redisTemplate.opsForValue().set("EMAIL:" + email, verificationCode, 5, TimeUnit.MINUTES);
-        log.debug("Redis에 인증 코드 저장 완료");
             
         // 이메일 발송
         SimpleMailMessage message = new SimpleMailMessage();
@@ -50,8 +49,7 @@ public class EmailService {
         log.info("이메일 인증 코드 검증 시작 - 이메일: {}", email);
         
         String storedCode = redisTemplate.opsForValue().get("EMAIL:" + email);
-        log.debug("Redis에서 조회한 인증 코드: {}", storedCode);
-        
+
         if (storedCode != null && storedCode.equals(code)) {
             redisTemplate.delete("EMAIL:" + email);
             log.info("이메일 인증 성공 - 이메일: {}", email);

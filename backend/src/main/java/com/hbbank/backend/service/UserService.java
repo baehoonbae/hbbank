@@ -28,16 +28,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public Optional<User> findById(Long userId){
-        log.debug("사용자 조회 시작 - 사용자ID: {}", userId);
-        Optional<User> user = userRepository.findById(userId);
-        log.debug("사용자 조회 완료 - 사용자ID: {}, 조회결과: {}", userId, user.isPresent());
-        return user;
+        return userRepository.findById(userId);
     }
 
     public User regist(UserRegistDTO user) {
-        log.info("사용자 등록 시작 - 사용자명: {}, 이메일: {}", user.getUsername(), user.getEmail());
-        log.debug("생년월일: {}", user.getBirth().toString());
-        
         User user2 = User.builder()
                 .address(user.getAddress())
                 .birth(user.getBirth())
@@ -49,20 +43,14 @@ public class UserService {
                 .emailVerified(true)
                 .build();
 
-        log.debug("사용자 엔티티 생성 완료");
-        User savedUser = userRepository.save(user2);
-        log.info("사용자 등록 완료 - 사용자ID: {}", savedUser.getId());
-        return savedUser;
+        return userRepository.save(user2);
     }
 
     public Optional<User> login(LoginRequestDTO loginRequest) {
-        log.info("로그인 시도 - 사용자명: {}", loginRequest.getUsername());
-        
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
         
         Optional<User> opUser = userRepository.findByUsername(username);
-        log.debug("사용자 조회 결과 - 존재여부: {}", opUser.isPresent());
         
         if (!opUser.isPresent() || opUser.isEmpty()) {
             log.warn("로그인 실패 - 존재하지 않는 사용자: {}", username);
@@ -71,7 +59,6 @@ public class UserService {
         
         User user = opUser.get();
         if (passwordEncoder.matches(password, user.getPassword())) {
-            log.info("로그인 성공 - 사용자ID: {}", user.getId());
             return opUser;
         } else {
             log.warn("로그인 실패 - 비밀번호 불일치 (사용자명: {})", username);
@@ -80,18 +67,11 @@ public class UserService {
     }
 
     public void completeEmailVerification(String email) {
-        log.info("이메일 인증 완료 처리 시작 - 이메일: {}", email);
         userRepository.findByEmail(email)
-                .ifPresent(user -> {
-                    log.debug("사용자 정보 업데이트 - 사용자ID: {}", user.getId());
-                    userRepository.save(user);
-                });
-        log.info("이메일 인증 완료 처리 완료 - 이메일: {}", email);
+                .ifPresent(user -> userRepository.save(user));
     }
 
     public User registOAuth2User(String email, String name) {
-        log.info("OAuth2 사용자 등록 시작 - 이메일: {}, 이름: {}", email, name);
-        
         User user = User.builder()
                 .email(email)
                 .name(name)
@@ -105,29 +85,20 @@ public class UserService {
                 .emailVerified(true)
                 .build();
 
-        log.debug("OAuth2 사용자 엔티티 생성 완료");
-        User savedUser = userRepository.save(user);
-        log.info("OAuth2 사용자 등록 완료 - 사용자ID: {}", savedUser.getId());
-        return savedUser;
+        return userRepository.save(user);
     }
 
     public Optional<User> findByEmail(String email) {
-        log.debug("이메일로 사용자 조회 시작 - 이메일: {}", email);
-        Optional<User> user = userRepository.findByEmail(email);
-        log.debug("이메일로 사용자 조회 완료 - 이메일: {}, 조회결과: {}", email, user.isPresent());
-        return user;
+        return userRepository.findByEmail(email);
     }
 
     public User updateAdditionalInfo(Long userId, OAuth2AdditionalInfoDTO dto) {
-        log.info("OAuth2 사용자 추가정보 업데이트 시작 - 사용자ID: {}", userId);
-        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("사용자 조회 실패 - 사용자ID: {}", userId);
                     return new UsernameNotFoundException("사용자를 찾을 수 없습니다");
                 });
 
-        log.debug("추가정보 업데이트 - 사용자명: {}, 생년월일: {}", dto.getUsername(), dto.getBirth());
         user.updateAdditionalInfo(
                 dto.getBirth(),
                 dto.getUsername(),
@@ -135,8 +106,6 @@ public class UserService {
                 dto.getPhone()
         );
 
-        User savedUser = userRepository.save(user);
-        log.info("OAuth2 사용자 추가정보 업데이트 완료 - 사용자ID: {}", userId);
-        return savedUser;
+        return userRepository.save(user);
     }
 }

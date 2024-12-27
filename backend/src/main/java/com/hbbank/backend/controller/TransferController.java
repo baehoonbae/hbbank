@@ -25,7 +25,7 @@ public class TransferController {
 
     @PostMapping("")
     public ResponseEntity<?> executeTransfer(@Valid @RequestBody TransferRequestDTO dto) {
-        boolean success = transferService.executeTransfer(dto);
+        boolean success = transferService.transfer(dto);
         if (success) {
             return ResponseEntity.ok(success);
         }

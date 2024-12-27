@@ -57,21 +57,22 @@ public class AutoTransferService {
 
         AutoTransfer sat = autoTransferRepository.save(at);
         log.info("자동이체 등록 완료 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
-                sat.getId(), dto.getFromAccountId(), dto.getToAccountNumber(),
-                dto.getAmount(), dto.getTransferDay());
+                sat.getId(), 
+                dto.getFromAccountId(), 
+                dto.getToAccountNumber(),
+                dto.getAmount(), 
+                dto.getTransferDay());
 
         return sat;
     }
 
     // 자동 이체 조회
     public Optional<AutoTransfer> findById(Long autoTransferId) {
-        log.debug("자동이체 단건 조회 - ID: {}", autoTransferId);
         return autoTransferRepository.findById(autoTransferId);
     }
 
     // 자동 이체 목록 조회
     public Optional<List<AutoTransfer>> findAllByUserId(Long userId) {
-        log.debug("자동이체 목록 조회 - 사용자ID: {}", userId);
         return autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }
 
@@ -101,8 +102,11 @@ public class AutoTransferService {
         AutoTransfer updated = autoTransferRepository.save(autoTransfer);
 
         log.info("자동이체 수정 완료 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
-                updated.getId(), updated.getFromAccount().getId(), updated.getToAccountNumber(),
-                updated.getAmount(), updated.getTransferDay());
+                updated.getId(), 
+                updated.getFromAccount().getId(), 
+                updated.getToAccountNumber(),
+                updated.getAmount(), 
+                updated.getTransferDay());
 
         return Optional.of(updated);
     }
@@ -127,17 +131,13 @@ public class AutoTransferService {
                 .findAllByNextTransferDateLessThanEqualAndStatus(today, TransferStatus.ACTIVE)
                 .orElse(Collections.emptyList());
 
-        log.debug("자동이체 대상 조회 완료 - 총 {}건", list.size());
-
         int totalCount = list.size();
         int successCount = 0;
         int failCount = 0;
 
         for (AutoTransfer at : list) {
-            log.debug("자동이체 실행 시도 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}",
-                    at.getId(), at.getFromAccount().getId(), at.getToAccountNumber(), at.getAmount());
             try {
-                boolean success = transferService.executeTransfer(TransferRequestDTO.builder()
+                boolean success = transferService.transfer(TransferRequestDTO.builder()
                         .type(TransferType.AUTO)
                         .fromAccountId(at.getFromAccount().getId())
                         .toAccountNumber(at.getToAccountNumber())
@@ -159,7 +159,6 @@ public class AutoTransferService {
                         at.getId(), at.getFromAccount().getId(), e.getMessage());
             } finally {
                 autoTransferRepository.save(at);
-                log.debug("자동이체 상태 업데이트 완료 - ID: {}, 상태: {}", at.getId(), at.getStatus());
             }
         }
         log.info("자동이체 실행 완료 - 총 {}건 중 성공: {}건, 실패: {}건", totalCount, successCount, failCount);
