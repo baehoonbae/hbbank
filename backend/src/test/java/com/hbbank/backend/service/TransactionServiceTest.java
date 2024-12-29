@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.dto.TransactionSearchDTO;
 import org.junit.jupiter.api.Assertions;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -31,8 +32,6 @@ import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.repository.TransactionRepository;
 import org.springframework.transaction.TransactionSystemException;
 
-import javax.security.auth.login.AccountNotFoundException;
-
 
 /*
 TransactionService 단위 테스트
@@ -55,9 +54,13 @@ class TransactionServiceTest {
     private Account fa;
     private Account ta;
     private BigDecimal amount;
+    private List<Transaction> tlist;
+    private TransactionSearchDTO allDto;
+    private TransactionSearchDTO withdrawDto;
+    private TransactionSearchDTO depositDto;
 
     @BeforeEach
-    @DisplayName("출금 계좌, 입금 계좌 생성")
+    @DisplayName("출금 계좌, 입금 계좌, 거래내역, 거래내역 조건 생성")
     void createAccounts() {
         fa = Account.builder()
                 .id(1L)
@@ -82,6 +85,53 @@ class TransactionServiceTest {
                 .dailyTransferLimit(new BigDecimal("1000000"))
                 .dailyTransferredAmount(BigDecimal.ZERO)
                 .build();
+
+        allDto = TransactionSearchDTO.builder()
+                .userId(1L)
+                .accountId(1L)
+                .startDate("2020-12-20")
+                .endDate("2024-12-29")
+                .transactionType(0)
+                .page(0)
+                .build();
+
+        depositDto = TransactionSearchDTO.builder()
+                .userId(1L)
+                .accountId(1L)
+                .startDate("2020-12-20")
+                .endDate("2024-12-29")
+                .transactionType(1)
+                .page(0)
+                .build();
+
+        withdrawDto = TransactionSearchDTO.builder()
+                .userId(1L)
+                .accountId(1L)
+                .startDate("2020-12-20")
+                .endDate("2024-12-29")
+                .transactionType(2)
+                .page(0)
+                .build();
+
+        LocalDateTime now = LocalDateTime.now();
+        tlist = List.of(
+                Transaction.builder()
+                        .transactionDateTime(now)
+                        .transactionType("출금")
+                        .build(),
+                Transaction.builder()
+                        .transactionDateTime(now.minusMinutes(1))
+                        .transactionType("입금")
+                        .build(),
+                Transaction.builder()
+                        .transactionDateTime(now.minusMinutes(2))
+                        .transactionType("출금")
+                        .build(),
+                Transaction.builder()
+                        .transactionDateTime(now.minusMinutes(3))
+                        .transactionType("입금")
+                        .build()
+        );
 
         amount = new BigDecimal("1000");
     }
@@ -167,21 +217,6 @@ class TransactionServiceTest {
     void findAllByAccountId_Fail_NotDescending() throws Exception {
         //given
         Long accountId = 1L;
-        LocalDateTime now = LocalDateTime.now();
-        List<Transaction> tlist = List.of(
-                Transaction.builder()
-                        .transactionDateTime(now)
-                        .transactionType("출금")
-                        .build(),
-                Transaction.builder()
-                        .transactionDateTime(now.minusMinutes(1))
-                        .transactionType("입금")
-                        .build(),
-                Transaction.builder()
-                        .transactionDateTime(now.minusMinutes(2))
-                        .transactionType("출금")
-                        .build()
-        );
         doNothing().when(accountService).verifyAccount(accountId);
         when(transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId))
                 .thenReturn(Optional.of(tlist));
@@ -258,6 +293,75 @@ class TransactionServiceTest {
         //when & then
         assertThrows(InvalidAccountStatusException.class, () -> transactionService.findAllByAccount_IdOrderByTransactionDateTimeDesc(1L));
         verify(transactionRepository).findAllByAccount_IdOrderByTransactionDateTimeDesc(1L);
+    }
+
+    @Test
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 모든 거래내역")
+    void findAllByCondition_Success_All() throws Exception {
+        // given
+        Long accountId = allDto.getAccountId();
+        doNothing().when(accountService).verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(allDto)).thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(allDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(allDto);
+    }
+
+    @Test
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 입금 거래내역")
+    void findAllByCondition_Success_Deposit()throws Exception {
+        // given
+        Long accountId = depositDto.getAccountId();
+        doNothing().when(accountService).verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(depositDto)).thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(depositDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(depositDto);
+    }
+
+    @Test
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 출금 거래내역")
+    void findAllByCondition_Success_Withdraw() throws Exception {
+        // given
+        Long accountId = withdrawDto.getAccountId();
+        doNothing().when(accountService).verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(withdrawDto)).thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(withdrawDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(withdrawDto);
     }
 
     @Test
