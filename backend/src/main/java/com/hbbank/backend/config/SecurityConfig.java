@@ -135,9 +135,7 @@ public class SecurityConfig {
             OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
             String email = oAuth2User.getAttribute("email");
 
-            User user = userService.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
-
+            User user = userService.findByEmail(email);
             TokenResponseDTO tokens = tokenService.createTokens(user.getId());
 
             String redirectUrl = UriComponentsBuilder

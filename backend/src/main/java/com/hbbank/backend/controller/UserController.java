@@ -53,8 +53,10 @@ public class UserController {
 
         String token = header.substring(7);
         Long userId = jwtUtil.getUserId(token);
-        User user = userService.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
+        User user = userService.findById(userId);
+
+        // RestControllerAdvice로 처리하기
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"));
 
         return ResponseEntity.ok(new LoginResponseDTO(token, user.getId(), user.getUsername(), user.getName(), "로그인 성공!"));
     }

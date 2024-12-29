@@ -2,6 +2,7 @@ package com.hbbank.backend.service;
 
 import java.util.Collections;
 
+import com.hbbank.backend.exception.UserNotFoundException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -31,19 +32,20 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     protected OAuth2User processOAuth2User(OAuth2User oauth2User) {
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
-        
+
         log.info("OAuth2 사용자 정보 - 이메일: {}, 이름: {}", email, name);
-        
-        userService.findByEmail(email)
-            .orElseGet(() -> {
-                log.info("신규 OAuth2 사용자 등록");
-                return userService.registOAuth2User(email, name);
-            });
-            
+
+        try {
+            userService.findByEmail(email);
+        } catch (UserNotFoundException e) {
+            log.info("신규 OAuth2 사용자 등록");
+            userService.registOAuth2User(email, name);
+        }
+
         return new DefaultOAuth2User(
-            Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-            oauth2User.getAttributes(),
-            "email"
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
+                oauth2User.getAttributes(),
+                "email"
         );
     }
 }

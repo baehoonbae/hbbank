@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +12,7 @@ import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.LoginRequestDTO;
 import com.hbbank.backend.dto.OAuth2AdditionalInfoDTO;
 import com.hbbank.backend.dto.UserRegistDTO;
+import com.hbbank.backend.exception.UserNotFoundException;
 import com.hbbank.backend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,12 +27,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Optional<User> findById(Long userId){
-        return userRepository.findById(userId);
+    public User findById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("사용자 조회 실패 - 사용자 ID: {}", userId);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다.");
+                });
     }
 
     public User regist(UserRegistDTO user) {
-        User user2 = User.builder()
+        return userRepository.save(User.builder()
                 .address(user.getAddress())
                 .birth(user.getBirth())
                 .email(user.getEmail())
@@ -41,28 +45,25 @@ public class UserService {
                 .phone(user.getPhone())
                 .username(user.getUsername())
                 .emailVerified(true)
-                .build();
-
-        return userRepository.save(user2);
+                .build()
+        );
     }
 
     public Optional<User> login(LoginRequestDTO loginRequest) {
         String username = loginRequest.getUsername();
         String password = loginRequest.getPassword();
-        
-        Optional<User> opUser = userRepository.findByUsername(username);
-        
-        if (!opUser.isPresent() || opUser.isEmpty()) {
-            log.warn("로그인 실패 - 존재하지 않는 사용자: {}", username);
-            return Optional.empty();
-        }
-        
-        User user = opUser.get();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(()->{
+                    log.warn("로그인 실패 - 존재하지 않는 사용자: {}", username);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다.");
+                });
+
         if (passwordEncoder.matches(password, user.getPassword())) {
-            return opUser;
+            return Optional.of(user);
         } else {
             log.warn("로그인 실패 - 비밀번호 불일치 (사용자명: {})", username);
-            return Optional.empty();
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
     }
 
@@ -79,7 +80,7 @@ public class UserService {
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .isOAuth2User(true)
                 .needAdditionalInfo(true)
-                .birth(LocalDate.of(1900,1,1))
+                .birth(LocalDate.of(1900, 1, 1))
                 .address("서울")
                 .phone("010-0000-0000")
                 .emailVerified(true)
@@ -88,15 +89,19 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(()->{
+                    log.warn("사용자 조회 실패 - 사용자 Email: {}", email);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다");
+                });
     }
 
     public User updateAdditionalInfo(Long userId, OAuth2AdditionalInfoDTO dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("사용자 조회 실패 - 사용자ID: {}", userId);
-                    return new UsernameNotFoundException("사용자를 찾을 수 없습니다");
+                    log.error("사용자 조회 실패 - 사용자 ID: {}", userId);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다");
                 });
 
         user.updateAdditionalInfo(
