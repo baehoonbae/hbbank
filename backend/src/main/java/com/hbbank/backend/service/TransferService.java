@@ -23,6 +23,8 @@ public class TransferService {
     private final TransactionService transactionService;
     private final PasswordEncoder passwordEncoder;
 
+    private Account fromAccount, toAccount;
+
     /*
      * 이체 시나리오 1.
      * 단순 순차 처리
@@ -32,8 +34,8 @@ public class TransferService {
      * 4. 종료(커밋 완료)
      * => 순차 이체 시나리오 통과
      * => 이체 시나리오 2에서 경쟁 상태(race condition) 발생 예상(잔액 부정확)
-     * 
-     * 
+     *
+     *
      * 이체 시나리오 2.
      * 동시 다중 이체 (B,C,D... -> A)
      * 순차처리 방식으로 했을 때 모든 잔액이 그대로인 현상
@@ -46,9 +48,9 @@ public class TransferService {
      * 낙관적 락은 충돌이 적은 상황(충돌시 재시도)에 적합,
      * 그러나 이체는 빈번한 충돌이 예상되고 데이터 정합성이 핵심이기에 비관적 락이 적합
      * => 비관적 락을 이용해 시나리오 2 통과
-     * 
-     * 
-     * 
+     *
+     *
+     *
      * 이체 시나리오 3.
      * 순환 이체(A <-> B)
      * 데드락 발생 예상
@@ -65,15 +67,15 @@ public class TransferService {
      * => 첫 번째 트랜잭션이 완료되지 않았는데 두 번째 트랜잭션이 시작됨 -> 트랜잭션 격리 수준 문제
      * => 즉 다른 트랜잭션에서 잔액 검증이 실패하는 문제가 발생함..
      * => 이를 해결하기 위해 테스트 코드의 트랜잭션 격리 수준을 더 높게 설정해야 함(SERIALIZABLE)
-     * 
-     * 
-     * 
+     *
+     *
+     *
      * 이체 시나리오 4.
      * 체이닝 이체 (1->2, 2->3, 3->4, 4->5.... 999->1000)
      * 데드락 발생 예상
      * => 시나리오 2, 3 문제점 해결 후 통과
-     * 
-     * 
+     *
+     *
      */
     public boolean transfer(TransferRequestDTO dto) {
         String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
@@ -84,9 +86,26 @@ public class TransferService {
                 .getAccountNumber();
         String toAccountNumber = dto.getToAccountNumber();
 
-        Account fromAccount, toAccount;
-
         // 계좌번호 오름차순으로 락 획득
+        getLock(dto, fromAccountNumber, toAccountNumber);
+
+        // 비밀번호 검증
+        checkPassword(dto);
+
+        // 이체 실행
+        executeTransfer(dto);
+
+        // 거래내역 생성
+        transactionService.createTransaction(fromAccount, toAccount, dto.getAmount());
+
+        // 변경사항 저장
+        accountRepository.saveAndFlush(fromAccount);
+        accountRepository.saveAndFlush(toAccount);
+
+        return true;
+    }
+
+    private void getLock(TransferRequestDTO dto, String fromAccountNumber, String toAccountNumber) {
         if (fromAccountNumber.compareTo(toAccountNumber) < 0) {
             fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
                     .orElseThrow(() -> {
@@ -110,27 +129,20 @@ public class TransferService {
                         return new RuntimeException("출금 계좌를 찾을 수 없습니다");
                     });
         }
+    }
 
-        // 비밀번호 검증
+    private void checkPassword(TransferRequestDTO dto) {
         if (dto.getType() == TransferType.INSTANT && !passwordEncoder.matches(dto.getPassword(), fromAccount.getPassword())) {
             log.error("이체 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
             throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
         }
+    }
 
-        // 이체 실행
-        log.info("이체 실행 - 출금계좌: {}, 입금계좌: {}, 금액: {}", 
+    private void executeTransfer(TransferRequestDTO dto) {
+        log.info("이체 실행 - 출금계좌: {}, 입금계좌: {}, 금액: {}",
                 fromAccount.getAccountNumber(), toAccount.getAccountNumber(), dto.getAmount());
         fromAccount.withdraw(dto.getAmount());
         toAccount.deposit(dto.getAmount());
-
-        // 거래내역 생성
-        transactionService.createTransaction(fromAccount, toAccount, dto.getAmount());
-
-        // 변경사항 저장
-        accountRepository.saveAndFlush(fromAccount);
-        accountRepository.saveAndFlush(toAccount);
-
-        return true;
     }
 
 }
