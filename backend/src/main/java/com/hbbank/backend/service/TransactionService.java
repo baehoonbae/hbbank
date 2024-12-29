@@ -25,14 +25,12 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountService accountService;
 
-    public void createTransaction(Account fromAccount, Account toAccount, BigDecimal amount){
+    public void createTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
         createWithdrawTransaction(fromAccount, toAccount, amount);
         createDepositTransaction(fromAccount, toAccount, amount);
     }
 
-    /*
-    출금 거래내역 생성
-     */
+    /* 출금 거래내역 생성 */
     public void createWithdrawTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
         log.info("출금 거래내역 생성 - 출금계좌: {}, 입금계좌: {}, 금액: {}, 잔액: {}",
                 fromAccount.getId(), toAccount.getId(), amount, fromAccount.getBalance());
@@ -52,9 +50,7 @@ public class TransactionService {
         transactionRepository.flush();
     }
 
-    /*
-    입금 거래내역 생성
-     */
+    /* 입금 거래내역 생성 */
     public void createDepositTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
         log.info("입금 거래내역 생성 - 출금계좌: {}, 입금계좌: {}, 금액: {}, 잔액: {}",
                 fromAccount.getId(), toAccount.getId(), amount, toAccount.getBalance());
@@ -74,9 +70,7 @@ public class TransactionService {
         transactionRepository.flush();
     }
 
-    /*
-    계좌 ID에 따라 거래내역을 모두 가져오고 거래 일시를 기준으로 내림차순 정렬
-     */
+    /* 계좌 ID에 따라 거래내역을 모두 가져오고 거래 일시를 기준으로 내림차순 정렬 */
     public Optional<List<Transaction>> findAllByAccount_IdOrderByTransactionDateTimeDesc(Long accountId) throws Exception {
         accountService.verifyAccount(accountId);
         Optional<List<Transaction>> transactions = transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
@@ -85,12 +79,11 @@ public class TransactionService {
         return transactions;
     }
 
-    /*
-    거래내역을 특정 조건에 따라 조회
-     */
-    public Optional<List<Transaction>> findAllByCondition(TransactionSearchDTO dto) {
+    /* 거래내역을 특정 조건에 따라 조회 */
+    public Optional<List<Transaction>> findAllByCondition(TransactionSearchDTO dto) throws Exception {
+        accountService.verifyAccount(dto.getAccountId());
         Optional<List<Transaction>> transactions = transactionRepository.findAllByCondition(dto);
-        log.info("거래내역 조건 조회 - 조회조건: {}, 조회결과: {} 건", 
+        log.info("거래내역 조건 조회 - 조회조건: {}, 조회결과: {} 건",
                 dto, transactions.map(List::size).orElse(0));
         return transactions;
     }

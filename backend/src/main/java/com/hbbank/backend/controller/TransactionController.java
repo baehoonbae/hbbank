@@ -37,7 +37,7 @@ public class TransactionController {
             List<Transaction> t = transactionService
                     .findAllByAccount_IdOrderByTransactionDateTimeDesc(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-                    
+
             List<TransactionResponseDTO> dtos = t.stream()
                     .map(TransactionResponseDTO::from)
                     .toList();
@@ -51,11 +51,15 @@ public class TransactionController {
     // 검색 조건으로 거래내역 조회
     @PostMapping("/transactions/search")
     public ResponseEntity<?> findAllByCondition(@RequestBody TransactionSearchDTO dto) {
-        List<Transaction> t = transactionService.findAllByCondition(dto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-        List<TransactionResponseDTO> dtos = t.stream()
-                .map(TransactionResponseDTO::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        try {
+            List<Transaction> t = transactionService.findAllByCondition(dto)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
+            List<TransactionResponseDTO> dtos = t.stream()
+                    .map(TransactionResponseDTO::from)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
