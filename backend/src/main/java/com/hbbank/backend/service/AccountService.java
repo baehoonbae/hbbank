@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.security.auth.login.AccountNotFoundException;
 
+import com.hbbank.backend.exception.UserNotFoundException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountService {
 
-    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final AccountTypeRepository accountTypeRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final AccountNumberGenerator numGen;
 
@@ -42,11 +43,7 @@ public class AccountService {
 
     public Account createAccount(AccountCreateDTO dto) {
         log.info("계좌 생성 시작 - 사용자ID: {}, 계좌유형: {}", dto.getUserId(), dto.getAccountTypeCode());
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> {
-                    log.error("계좌 생성 실패 - 사용자 없음 (사용자ID: {})", dto.getUserId());
-                    return new RuntimeException("유저를 찾을 수 없습니다.");
-                });
+        User user = userService.findById(dto.getUserId());
 
         AccountType accountType = accountTypeRepository.findById(dto.getAccountTypeCode())
                 .orElseThrow(() -> {
@@ -67,8 +64,8 @@ public class AccountService {
 
         Account savedAccount = accountRepository.save(account2);
         log.info("계좌 생성 완료 - 계좌번호: {}, 계좌유형: {}, 사용자ID: {}",
-                savedAccount.getAccountNumber(), 
-                savedAccount.getAccountType().getCode(), 
+                savedAccount.getAccountNumber(),
+                savedAccount.getAccountType().getCode(),
                 savedAccount.getUser().getId());
 
         return savedAccount;
@@ -96,6 +93,8 @@ public class AccountService {
     public void verifyAccount(Long accountId) throws Exception {
         Account a = findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("존재하지 않는 계좌입니다."));
+
+        userService.findById(a.getUser().getId());
 
         if (!a.getStatus().equals(AccountStatus.ACTIVE)) {
             throw new InvalidAccountStatusException("");
