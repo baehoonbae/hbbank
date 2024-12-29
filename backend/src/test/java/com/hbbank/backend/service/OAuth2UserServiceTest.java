@@ -6,15 +6,20 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import static org.mockito.ArgumentMatchers.anyString;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
@@ -42,13 +47,13 @@ class OAuth2UserServiceTest {
         when(oauth2User.getAttribute("email")).thenReturn(email);
         when(oauth2User.getAttribute("name")).thenReturn(name);
         when(oauth2User.getAttributes()).thenReturn(Map.of("email", email, "name", name));
-        when(userService.findByEmail(email)).thenReturn(Optional.of(
+        when(userService.findByEmail(email)).thenReturn(
                 User.builder()
                         .email(email)
                         .name(name)
                         .isOAuth2User(true)
                         .build()
-        ));
+        );
 
         // when
         OAuth2User result = oAuth2UserService.processOAuth2User(oauth2User);
@@ -70,7 +75,7 @@ class OAuth2UserServiceTest {
         when(oauth2User.getAttribute("email")).thenReturn(email);
         when(oauth2User.getAttribute("name")).thenReturn(name);
         when(oauth2User.getAttributes()).thenReturn(Map.of("email", email, "name", name));
-        when(userService.findByEmail(email)).thenReturn(Optional.empty());
+        when(userService.findByEmail(email)).thenReturn(null);
         when(userService.registOAuth2User(email, name)).thenReturn(
                 User.builder()
                         .email(email)

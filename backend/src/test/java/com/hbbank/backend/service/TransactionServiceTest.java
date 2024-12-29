@@ -3,18 +3,16 @@ package com.hbbank.backend.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.hbbank.backend.dto.TransactionSearchDTO;
-import org.junit.jupiter.api.Assertions;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.hbbank.backend.exception.InvalidAccountStatusException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,13 +28,18 @@ import com.hbbank.backend.domain.Transaction;
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.repository.TransactionRepository;
+
 import org.springframework.transaction.TransactionSystemException;
+
+import com.hbbank.backend.dto.TransactionSearchDTO;
 
 
 /*
 TransactionService 단위 테스트
 거래내역을 생성하는 메서드는 이미 생성에 대한 검증은 끝난 채로 메서드 호출이 될 예정
 따라서 거래내역 생성에 대해서는 생성이 되었는지만 확인
+
+Optional.empty() => null 값 반환
  */
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
@@ -365,51 +368,208 @@ class TransactionServiceTest {
     }
 
     @Test
-    @DisplayName("특정 조건으로 거래내역 조회 성공 - NULL 이 아닌 리스트")
-    void findAllByCondition_Success_NotNull() {
-        // TODO document why this method is empty
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 모든 거래내역")
+    void findAllByCondition_Success_All() throws Exception {
+        // given
+        Long accountId = allDto.getAccountId();
+        doNothing().when(accountService).verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(allDto)).thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(allDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(allDto);
     }
 
     @Test
-    @DisplayName("특정 조건으로 거래내역 조회 성공 - 거래내역 없음")
-    void findAllByCondition_Success_EmptyList() {
-        // TODO document why this method is empty
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 입금 거래내역")
+    void findAllByCondition_Success_Deposit() throws Exception {
+        // given
+        Long accountId = depositDto.getAccountId();
+        doNothing().when(accountService).verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(depositDto)).thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(depositDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(depositDto);
+    }
+
+    @Test
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 출금 거래내역")
+    void findAllByCondition_Success_Withdraw() throws Exception {
+        // given
+        Long accountId = withdrawDto.getAccountId();
+        doNothing()
+                .when(accountService)
+                .verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(withdrawDto))
+                .thenReturn(Optional.of(tlist));
+
+        // when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(withdrawDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        // then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertTrue(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(withdrawDto);
+    }
+
+    @Test
+    @DisplayName("특정 조건으로 거래내역 조회 성공 - 빈 리스트")
+    void findAllByCondition_Success_EmptyList() throws Exception {
+        //given
+        Long accountId = allDto.getAccountId();
+        doNothing()
+                .when(accountService)
+                .verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(allDto))
+                .thenReturn(Optional.of(List.of()));
+
+        //when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(allDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        //then
+        assertTrue(result.isEmpty());
+        verify(transactionRepository).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - 존재하지 않는 계좌")
-    void findAllByCondition_Fail_NotExisting() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_NotExisting() throws Exception {
+        //given
+        Long accountId = allDto.getAccountId();
+        doThrow(new AccountNotFoundException())
+                .when(accountService)
+                .verifyAccount(accountId);
+
+        //when&given
+        assertThrows(AccountNotFoundException.class, () -> transactionService.findAllByCondition(allDto));
+        verify(accountService).verifyAccount(accountId);
+        verify(transactionRepository, times(0)).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - NULL 값")
-    void findAllByCondition_Fail_IsNull() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_IsNull() throws Exception {
+        //given
+        Long accountId = allDto.getAccountId();
+        doNothing()
+                .when(accountService)
+                .verifyAccount(accountId);
+        when(transactionRepository.findAllByCondition(allDto))
+                .thenReturn(Optional.empty());
+
+        //when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(allDto);
+
+        //then
+        assertTrue(res.isEmpty());
+        verify(transactionRepository).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - 정상 상태가 아닌 계좌")
-    void findAllByCondition_Fail_NotActiveAccount() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_NotActiveAccount() throws Exception {
+        //given
+        Long accountId = allDto.getAccountId();
+        doThrow(new InvalidAccountStatusException())
+                .when(accountService)
+                .verifyAccount(accountId);
+
+        //when & then
+        assertThrows(InvalidAccountStatusException.class, () -> transactionService.findAllByCondition(allDto));
+        verify(accountService).verifyAccount(accountId);
+        verify(transactionRepository, times(0)).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - 내림차순이 아님")
-    void findAllByCondition_Fail_NotDescending() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_NotDescending() throws Exception {
+        //given
+        Long accountId = allDto.getAccountId();
+        doNothing()
+                .when(accountService)
+                .verifyAccount(accountId);
+
+        // List.of로 생성한 tlist는 불변 객체이므로 ArrayList 로 새 객체 생성해서 쓰기
+        ArrayList<Transaction> temp = new ArrayList<>(tlist);
+        Collections.sort(temp, (a, b) -> a.getTransactionDateTime().compareTo(b.getTransactionDateTime()));
+
+        when(transactionRepository.findAllByCondition(allDto))
+                .thenReturn(Optional.of(temp));
+
+        //when
+        Optional<List<Transaction>> res = transactionService
+                .findAllByCondition(allDto);
+        assertTrue(res.isPresent());
+        List<Transaction> result = res.get();
+
+        //then
+        for (int i = 0; i < result.size() - 1; i++) {
+            LocalDateTime a = result.get(i).getTransactionDateTime();
+            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
+            assertFalse(a.isAfter(b));
+        }
+        verify(transactionRepository).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - 종료일이 앞섬")
-    void findAllByCondition_Fail_EndDateAhead() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_EndDateAhead() throws Exception {
+        //given
+        doNothing()
+                .when(accountService)
+                .verifyAccount(1L);
+        when(transactionRepository.findAllByCondition(allDto))
+                .thenThrow(new IllegalArgumentException("종료일이 시작일보다 앞설 수 없습니다."));
+
+        //when & then
+        assertThrows(IllegalArgumentException.class, () -> transactionService.findAllByCondition(allDto));
+        verify(transactionRepository).findAllByCondition(allDto);
     }
 
     @Test
     @DisplayName("특정 조건으로 거래내역 조회 실패 - 존재하지 않는 사용자")
-    void findAllByCondition_Fail_UserNotFound() {
-        // TODO document why this method is empty
+    void findAllByCondition_Fail_UserNotFound() throws Exception {
+        // given
+        Long accountId = 1L;
+        doThrow(new UserNotFoundException("사용자를 찾을 수 없습니다."))
+                .when(accountService)
+                .verifyAccount(accountId);
+
+        //when&then
+        assertThrows(UserNotFoundException.class, () -> transactionService.findAllByCondition(allDto));
+        verify(accountService).verifyAccount(accountId);
+        verify(transactionRepository, times(0)).findAllByCondition(allDto);
     }
 
 }
