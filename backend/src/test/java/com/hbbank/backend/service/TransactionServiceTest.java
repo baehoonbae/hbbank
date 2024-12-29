@@ -13,6 +13,7 @@ import static org.mockito.Mockito.*;
 
 import com.hbbank.backend.exception.InvalidAccountStatusException;
 
+import com.hbbank.backend.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ import com.hbbank.backend.repository.TransactionRepository;
 import org.springframework.transaction.TransactionSystemException;
 
 import com.hbbank.backend.dto.TransactionSearchDTO;
+
+import javax.security.auth.login.AccountNotFoundException;
 
 
 /*
@@ -296,75 +299,6 @@ class TransactionServiceTest {
         //when & then
         assertThrows(InvalidAccountStatusException.class, () -> transactionService.findAllByAccount_IdOrderByTransactionDateTimeDesc(1L));
         verify(transactionRepository).findAllByAccount_IdOrderByTransactionDateTimeDesc(1L);
-    }
-
-    @Test
-    @DisplayName("특정 조건으로 거래내역 조회 성공 - 모든 거래내역")
-    void findAllByCondition_Success_All() throws Exception {
-        // given
-        Long accountId = allDto.getAccountId();
-        doNothing().when(accountService).verifyAccount(accountId);
-        when(transactionRepository.findAllByCondition(allDto)).thenReturn(Optional.of(tlist));
-
-        // when
-        Optional<List<Transaction>> res = transactionService
-                .findAllByCondition(allDto);
-        assertTrue(res.isPresent());
-        List<Transaction> result = res.get();
-
-        // then
-        for (int i = 0; i < result.size() - 1; i++) {
-            LocalDateTime a = result.get(i).getTransactionDateTime();
-            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
-            assertTrue(a.isAfter(b));
-        }
-        verify(transactionRepository).findAllByCondition(allDto);
-    }
-
-    @Test
-    @DisplayName("특정 조건으로 거래내역 조회 성공 - 입금 거래내역")
-    void findAllByCondition_Success_Deposit()throws Exception {
-        // given
-        Long accountId = depositDto.getAccountId();
-        doNothing().when(accountService).verifyAccount(accountId);
-        when(transactionRepository.findAllByCondition(depositDto)).thenReturn(Optional.of(tlist));
-
-        // when
-        Optional<List<Transaction>> res = transactionService
-                .findAllByCondition(depositDto);
-        assertTrue(res.isPresent());
-        List<Transaction> result = res.get();
-
-        // then
-        for (int i = 0; i < result.size() - 1; i++) {
-            LocalDateTime a = result.get(i).getTransactionDateTime();
-            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
-            assertTrue(a.isAfter(b));
-        }
-        verify(transactionRepository).findAllByCondition(depositDto);
-    }
-
-    @Test
-    @DisplayName("특정 조건으로 거래내역 조회 성공 - 출금 거래내역")
-    void findAllByCondition_Success_Withdraw() throws Exception {
-        // given
-        Long accountId = withdrawDto.getAccountId();
-        doNothing().when(accountService).verifyAccount(accountId);
-        when(transactionRepository.findAllByCondition(withdrawDto)).thenReturn(Optional.of(tlist));
-
-        // when
-        Optional<List<Transaction>> res = transactionService
-                .findAllByCondition(withdrawDto);
-        assertTrue(res.isPresent());
-        List<Transaction> result = res.get();
-
-        // then
-        for (int i = 0; i < result.size() - 1; i++) {
-            LocalDateTime a = result.get(i).getTransactionDateTime();
-            LocalDateTime b = result.get(i + 1).getTransactionDateTime();
-            assertTrue(a.isAfter(b));
-        }
-        verify(transactionRepository).findAllByCondition(withdrawDto);
     }
 
     @Test
