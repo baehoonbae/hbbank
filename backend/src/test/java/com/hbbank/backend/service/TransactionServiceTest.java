@@ -67,7 +67,7 @@ class TransactionServiceTest {
 
     @BeforeEach
     @DisplayName("출금 계좌, 입금 계좌, 거래내역, 거래내역 조건 생성")
-    void createAccounts() {
+    void init() {
         fa = Account.builder()
                 .id(1L)
                 .status(AccountStatus.ACTIVE)
