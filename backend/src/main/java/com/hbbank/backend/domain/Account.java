@@ -94,6 +94,11 @@ public class Account {
         this.dailyTransferredAmount = this.dailyTransferredAmount.add(amount);
     }
 
+    public void deposit(BigDecimal amount) {
+        validateAccountStatus();
+        this.balance = this.balance.add(amount);
+    }
+
     private void validateAccountStatus() {
         if (this.status != AccountStatus.ACTIVE) {
             throw new InvalidAccountStatusException("유효하지 않은 계좌 상태입니다: " + this.status);
@@ -101,7 +106,7 @@ public class Account {
     }
 
     private void validateTransferLimit(BigDecimal amount) {
-        if (amount.compareTo(this.transferLimit) > 0) {
+        if (amount.compareTo(this.transferLimit) >= 0) {
             throw new TransferLimitExceededException("1회 이체한도를 초과했습니다");
         }
     }
@@ -116,10 +121,6 @@ public class Account {
         if (this.balance.compareTo(amount) < 0) {
             throw new OutofBalanceException("잔액이 부족합니다");
         }
-    }
-
-    public void deposit(BigDecimal amount) {
-        this.balance = this.balance.add(amount);
     }
 
 }

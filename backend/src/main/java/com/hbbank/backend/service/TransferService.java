@@ -1,5 +1,6 @@
 package com.hbbank.backend.service;
 
+import com.hbbank.backend.exception.AccountNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,7 +82,7 @@ public class TransferService {
         String fromAccountNumber = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("출금계좌 조회 실패 - 계좌ID: {}", dto.getFromAccountId());
-                    return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                    return new AccountNotFoundException("출금 계좌를 찾을 수 없습니다");
                 })
                 .getAccountNumber();
         String toAccountNumber = dto.getToAccountNumber();
@@ -110,23 +111,23 @@ public class TransferService {
             fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
                     .orElseThrow(() -> {
                         log.error("출금계좌 락 획득 실패 - 계좌ID: {}", dto.getFromAccountId());
-                        return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                        return new AccountNotFoundException("출금 계좌를 찾을 수 없습니다");
                     });
             toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
                     .orElseThrow(() -> {
                         log.error("입금계좌 락 획득 실패 - 계좌번호: {}", toAccountNumber);
-                        return new RuntimeException("입금 계좌를 찾을 수 없습니다");
+                        return new AccountNotFoundException("입금 계좌를 찾을 수 없습니다");
                     });
         } else {
             toAccount = accountRepository.findByAccountNumberWithLock(toAccountNumber)
                     .orElseThrow(() -> {
                         log.error("입금계좌 락 획득 실패 - 계좌번호: {}", toAccountNumber);
-                        return new RuntimeException("입금 계좌를 찾을 수 없습니다");
+                        return new AccountNotFoundException("입금 계좌를 찾을 수 없습니다");
                     });
             fromAccount = accountRepository.findByIdWithLock(dto.getFromAccountId())
                     .orElseThrow(() -> {
                         log.error("출금계좌 락 획득 실패 - 계좌ID: {}", dto.getFromAccountId());
-                        return new RuntimeException("출금 계좌를 찾을 수 없습니다");
+                        return new AccountNotFoundException("출금 계좌를 찾을 수 없습니다");
                     });
         }
     }
