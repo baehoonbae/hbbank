@@ -30,7 +30,7 @@ import java.util.Optional;
  * TransferService 단위 테스트
  */
 @ExtendWith(MockitoExtension.class)
-public class TransferServiceTest {
+class TransferServiceTest {
     @Mock
     private TransactionRepository transactionRepository;
     @Mock

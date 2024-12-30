@@ -35,7 +35,7 @@ import com.hbbank.backend.util.AccountNumberGenerator;
 
 // AccountService 단위 테스트
 @ExtendWith(MockitoExtension.class)
-public class AccountServiceTest {
+class AccountServiceTest {
 
     @Mock
     private AccountRepository accountRepository;
@@ -53,7 +53,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 생성 성공")
-    public void createAccount_Success() {
+    void createAccount_Success() {
         // given
         AccountCreateDTO dto = AccountCreateDTO.builder()
                 .userId(1L)
@@ -116,7 +116,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 생성 실패 - 사용자 없음")
-    public void createAccount_UserNotFound() {
+    void createAccount_UserNotFound() {
         // given
         AccountCreateDTO dto = AccountCreateDTO.builder()
                 .userId(33333L)
@@ -133,7 +133,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 생성 실패 - 계좌유형 없음")
-    public void createAccount_AccountTypeNotFound() {
+    void createAccount_AccountTypeNotFound() {
         // given
         AccountCreateDTO dto = AccountCreateDTO.builder()
                 .userId(1L)
@@ -159,7 +159,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 유형 목록 조회 성공")
-    public void getAccountTypes_Success() {
+    void getAccountTypes_Success() {
         // given
         List<AccountType> expectedTypes = Arrays.asList(
                 AccountType.builder().code("001").name("입출금통장").build(),
@@ -178,7 +178,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌번호로 계좌 조회 성공")
-    public void findByAccountNumber_Success() {
+    void findByAccountNumber_Success() {
         // given
         String accountNumber = "1234567890";
         Account expectedAccount = Account.builder()
@@ -198,7 +198,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("사용자 ID로 계좌 목록 조회 성공")
-    public void findAllByUser_Id_Success() {
+    void findAllByUser_Id_Success() {
         // given
         Long userId = 1L;
         List<Account> expectedAccounts = Arrays.asList(
@@ -219,7 +219,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 ID로 계좌 조회 성공")
-    public void findById_Success() {
+    void findById_Success() {
         // given
         Long accountId = 1L;
         Account expectedAccount = Account.builder()
@@ -240,7 +240,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 ID로 계좌 조회 실패 - 계좌 없음")
-    public void findById_NotFound() {
+    void findById_NotFound() {
         // given
         Long accountId = 1L;
         when(accountRepository.findByIdWithUser(accountId))
@@ -256,7 +256,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("일일 이체 한도 초기화 성공")
-    public void resetDailyTransferAmount_Success() {
+    void resetDailyTransferAmount_Success() {
         // when
         accountService.resetDailyTransferAmount();
 
@@ -266,7 +266,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("출금 실패 - 계좌 상태 비활성화")
-    public void withdraw_InvalidAccountStatus() {
+    void withdraw_InvalidAccountStatus() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.DORMANT)
@@ -279,7 +279,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("출금 실패 - 1회 이체한도 초과")
-    public void withdraw_TransferLimitExceeded() {
+    void withdraw_TransferLimitExceeded() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.ACTIVE)
@@ -296,7 +296,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("출금 실패 - 일일 이체한도 초과")
-    public void withdraw_DailyTransferLimitExceeded() {
+    void withdraw_DailyTransferLimitExceeded() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.ACTIVE)
@@ -313,7 +313,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("출금 실패 - 잔액 부족")
-    public void withdraw_OutOfBalance() {
+    void withdraw_OutOfBalance() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.ACTIVE)
@@ -330,7 +330,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("출금 성공")
-    public void withdraw_Success() {
+    void withdraw_Success() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.ACTIVE)
@@ -350,7 +350,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("입금 성공")
-    public void deposit_Success() {
+    void deposit_Success() {
         // given
         Account account = Account.builder()
                 .balance(new BigDecimal("100000"))
@@ -366,7 +366,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("입금 실패 - 유효하지 않은 계좌 상태")
-    public void deposit_Fail_InvalidAccountStatus() {
+    void deposit_Fail_InvalidAccountStatus() {
         // given
         Account account = Account.builder()
                 .balance(new BigDecimal("100000"))
@@ -379,7 +379,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 상태 변경 테스트 - 휴면")
-    public void accountStatus_Dormant() {
+    void accountStatus_Dormant() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.DORMANT)
@@ -397,7 +397,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 상태 변경 테스트 - 정지")
-    public void accountStatus_Blocked() {
+    void accountStatus_Blocked() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.BLOCKED)
@@ -415,7 +415,7 @@ public class AccountServiceTest {
 
     @Test
     @DisplayName("계좌 상태 변경 테스트 - 해지")
-    public void accountStatus_Closed() {
+    void accountStatus_Closed() {
         // given
         Account account = Account.builder()
                 .status(AccountStatus.CLOSED)
