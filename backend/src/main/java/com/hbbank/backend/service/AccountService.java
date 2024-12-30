@@ -3,8 +3,7 @@ package com.hbbank.backend.service;
 import java.util.List;
 import java.util.Optional;
 
-import javax.security.auth.login.AccountNotFoundException;
-
+import com.hbbank.backend.exception.AccountNotFoundException;
 import com.hbbank.backend.exception.UserNotFoundException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -90,7 +89,7 @@ public class AccountService {
         log.info("일일 이체 한도 초기화 완료");
     }
 
-    public void verifyAccount(Long accountId) throws Exception {
+    public void verifyAccount(Long accountId) {
         Account a = findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("존재하지 않는 계좌입니다."));
 
