@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.exception.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,10 +28,6 @@ import com.hbbank.backend.domain.AccountType;
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.dto.AccountCreateDTO;
-import com.hbbank.backend.exception.DailyTransferLimitExceededException;
-import com.hbbank.backend.exception.InvalidAccountStatusException;
-import com.hbbank.backend.exception.OutofBalanceException;
-import com.hbbank.backend.exception.TransferLimitExceededException;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.AccountTypeRepository;
 import com.hbbank.backend.repository.UserRepository;
@@ -41,13 +38,13 @@ import com.hbbank.backend.util.AccountNumberGenerator;
 public class AccountServiceTest {
 
     @Mock
-    private UserRepository userRepository;
-    @Mock
     private AccountRepository accountRepository;
     @Mock
     private AccountTypeRepository accountTypeRepository;
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private UserService userService;
+    @Mock
+    private PasswordEncoder encoder;
     @Mock
     private AccountNumberGenerator numGen;
 
@@ -64,56 +61,56 @@ public class AccountServiceTest {
                 .balance(new BigDecimal("10000"))
                 .password("1234")
                 .build();
-        
+
         User user = User.builder()
-            .id(1L)
-            .name("홍길동")
-            .build();
-            
+                .id(1L)
+                .name("홍길동")
+                .build();
+
         AccountType accountType = AccountType.builder()
-            .code("001")
-            .name("입출금통장")
-            .description("일반 입출금 통장")
-            .interestRate(0.1)
-            .minimumBalance(0L)
-            .defaultTransferLimit(new BigDecimal("5000000"))
-            .defaultDailyTransferLimit(new BigDecimal("10000000"))
-            .build();
-            
+                .code("001")
+                .name("입출금통장")
+                .description("일반 입출금 통장")
+                .interestRate(0.1)
+                .minimumBalance(0L)
+                .defaultTransferLimit(new BigDecimal("5000000"))
+                .defaultDailyTransferLimit(new BigDecimal("10000000"))
+                .build();
+
         String accountNumber = "1234567890";
         String encodedPassword = "encodedPassword";
-        
-        Account expectedAccount = Account.builder()
-            .user(user)
-            .accountType(accountType)
-            .accountName(accountType.getName())
-            .accountNumber(accountNumber)
-            .balance(new BigDecimal("10000"))
-            .interestRate(accountType.getInterestRate())
-            .password(encodedPassword)
-            .build();
 
-        // when
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        Account expectedAccount = Account.builder()
+                .user(user)
+                .accountType(accountType)
+                .accountName(accountType.getName())
+                .accountNumber(accountNumber)
+                .balance(new BigDecimal("10000"))
+                .interestRate(accountType.getInterestRate())
+                .password(encodedPassword)
+                .build();
+
+        when(userService.findById(1L)).thenReturn(user);
         when(accountTypeRepository.findById("001")).thenReturn(Optional.of(accountType));
         when(numGen.generate("001")).thenReturn(accountNumber);
-        when(passwordEncoder.encode("1234")).thenReturn(encodedPassword);
+        when(encoder.encode("1234")).thenReturn(encodedPassword);
         when(accountRepository.save(any(Account.class))).thenReturn(expectedAccount);
 
-        // then
+        // when
         Account result = accountService.createAccount(dto);
-        
+
+        // then
         assertNotNull(result);
         assertEquals(accountNumber, result.getAccountNumber());
         assertEquals(user, result.getUser());
         assertEquals(accountType, result.getAccountType());
         assertEquals(new BigDecimal("10000"), result.getBalance());
         assertEquals(encodedPassword, result.getPassword());
-        
-        verify(userRepository).findById(1L);
+
+        verify(userService).findById(1L);
         verify(accountTypeRepository).findById("001");
         verify(numGen).generate("001");
-        verify(passwordEncoder).encode("1234");
+        verify(encoder).encode("1234");
         verify(accountRepository).save(any(Account.class));
     }
 
@@ -122,21 +119,20 @@ public class AccountServiceTest {
     public void createAccount_UserNotFound() {
         // given
         AccountCreateDTO dto = AccountCreateDTO.builder()
-                .userId(1L)
+                .userId(33333L)
                 .accountTypeCode("001")
                 .password("1234")
                 .balance(new BigDecimal("10000"))
                 .build();
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userService.findById(dto.getUserId())).thenThrow(UserNotFoundException.class);
 
         // when & then
-        assertThrows(RuntimeException.class, () -> accountService.createAccount(dto));
-        verify(userRepository).findById(1L);
-        verifyNoInteractions(accountTypeRepository, numGen, passwordEncoder, accountRepository);
+        assertThrows(UserNotFoundException.class, () -> accountService.createAccount(dto));
+        verify(userService).findById(any());
     }
 
     @Test
-    @DisplayName("계좌 생성 실패 - 계좌유형 없음") 
+    @DisplayName("계좌 생성 실패 - 계좌유형 없음")
     public void createAccount_AccountTypeNotFound() {
         // given
         AccountCreateDTO dto = AccountCreateDTO.builder()
@@ -151,14 +147,14 @@ public class AccountServiceTest {
                 .name("홍길동")
                 .build();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userService.findById(1L)).thenReturn(user);
         when(accountTypeRepository.findById("999")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(RuntimeException.class, () -> accountService.createAccount(dto));
-        verify(userRepository).findById(1L);
+        verify(userService).findById(1L);
         verify(accountTypeRepository).findById("999");
-        verifyNoInteractions(numGen, passwordEncoder, accountRepository);
+        verifyNoInteractions(numGen, encoder, accountRepository);
     }
 
     @Test
@@ -166,8 +162,8 @@ public class AccountServiceTest {
     public void getAccountTypes_Success() {
         // given
         List<AccountType> expectedTypes = Arrays.asList(
-            AccountType.builder().code("001").name("입출금통장").build(),
-            AccountType.builder().code("002").name("적금통장").build()
+                AccountType.builder().code("001").name("입출금통장").build(),
+                AccountType.builder().code("002").name("적금통장").build()
         );
         when(accountTypeRepository.findAll()).thenReturn(expectedTypes);
 
@@ -186,10 +182,10 @@ public class AccountServiceTest {
         // given
         String accountNumber = "1234567890";
         Account expectedAccount = Account.builder()
-            .accountNumber(accountNumber)
-            .build();
+                .accountNumber(accountNumber)
+                .build();
         when(accountRepository.findByAccountNumberWithUser(accountNumber))
-            .thenReturn(Optional.of(expectedAccount));
+                .thenReturn(Optional.of(expectedAccount));
 
         // when
         Optional<Account> result = accountService.findByAccountNumber(accountNumber);
@@ -206,11 +202,11 @@ public class AccountServiceTest {
         // given
         Long userId = 1L;
         List<Account> expectedAccounts = Arrays.asList(
-            Account.builder().accountNumber("1111").build(),
-            Account.builder().accountNumber("2222").build()
+                Account.builder().accountNumber("1111").build(),
+                Account.builder().accountNumber("2222").build()
         );
         when(accountRepository.findAllByUser_IdWithUser(userId))
-            .thenReturn(Optional.of(expectedAccounts));
+                .thenReturn(Optional.of(expectedAccounts));
 
         // when
         Optional<List<Account>> result = accountService.findAllByUser_Id(userId);
@@ -277,7 +273,7 @@ public class AccountServiceTest {
                 .build();
 
         // when & then
-        assertThrows(InvalidAccountStatusException.class, 
+        assertThrows(InvalidAccountStatusException.class,
                 () -> account.withdraw(new BigDecimal("10000")));
     }
 
@@ -294,7 +290,7 @@ public class AccountServiceTest {
                 .build();
 
         // when & then
-        assertThrows(TransferLimitExceededException.class, 
+        assertThrows(TransferLimitExceededException.class,
                 () -> account.withdraw(new BigDecimal("600000")));
     }
 
@@ -311,7 +307,7 @@ public class AccountServiceTest {
                 .build();
 
         // when & then
-        assertThrows(DailyTransferLimitExceededException.class, 
+        assertThrows(DailyTransferLimitExceededException.class,
                 () -> account.withdraw(new BigDecimal("300000")));
     }
 
@@ -328,7 +324,7 @@ public class AccountServiceTest {
                 .build();
 
         // when & then
-        assertThrows(OutofBalanceException.class, 
+        assertThrows(OutofBalanceException.class,
                 () -> account.withdraw(new BigDecimal("200000")));
     }
 
@@ -358,6 +354,7 @@ public class AccountServiceTest {
         // given
         Account account = Account.builder()
                 .balance(new BigDecimal("100000"))
+                .status(AccountStatus.ACTIVE)
                 .build();
 
         // when
@@ -365,6 +362,19 @@ public class AccountServiceTest {
 
         // then
         assertEquals(new BigDecimal("150000"), account.getBalance());
+    }
+
+    @Test
+    @DisplayName("입금 실패 - 유효하지 않은 계좌 상태")
+    public void deposit_Fail_InvalidAccountStatus() {
+        // given
+        Account account = Account.builder()
+                .balance(new BigDecimal("100000"))
+                .status(AccountStatus.DORMANT)
+                .build();
+
+        // when & then
+        assertThrows(InvalidAccountStatusException.class, () -> account.deposit(new BigDecimal("50000")));
     }
 
     @Test
