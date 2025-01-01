@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.LoginRequestDTO;
@@ -63,8 +62,8 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<?> regist(@Valid @RequestBody UserRegistDTO dto) {
-        User registeredUser = userService.regist(dto);
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegistDTO dto) {
+        User registeredUser = userService.register(dto);
         if (registeredUser != null) {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "회원가입이 완료되었습니다."));
@@ -77,33 +76,27 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         log.info("loginRequest: {}", loginRequest);
         try {
-            Optional<User> opUser = userService.login(loginRequest);
-            return opUser
-                    .map(user -> {
-                        TokenResponseDTO tokens = tokenService.createTokens(user.getId());
+            User user = userService.login(loginRequest);
+            TokenResponseDTO tokens = tokenService.createTokens(user.getId());
 
-                        ResponseCookie refreshTokenCookie = ResponseCookie
-                                .from("refreshToken", tokens.getRefreshToken())
-                                .httpOnly(true) // 자바스크립트 접근 불가
-                                .secure(true) // https 프로토콜에서만 전송(개발 단계에서는 주석 처리)
-                                .path("/") // 모든 경로에서 접근 가능
-                                .maxAge(60 * 60 * 24 * 14) // 2주
-                                .sameSite("None") // https 필수
-                                // .domain("fqdashboard.duckdns.org") // 도메인 설정(생기면 주석 해제)
-                                .build();
+            ResponseCookie refreshTokenCookie = ResponseCookie
+                    .from("refreshToken", tokens.getRefreshToken())
+                    .httpOnly(true) // 자바스크립트 접근 불가
+                    .secure(true) // https 프로토콜에서만 전송(개발 단계에서는 주석 처리)
+                    .path("/") // 모든 경로에서 접근 가능
+                    .maxAge(60 * 60 * 24 * 14) // 2주
+                    .sameSite("None") // https 필수
+                    // .domain("fqdashboard.duckdns.org") // 도메인 설정(생기면 주석 해제)
+                    .build();
 
-                        return ResponseEntity.ok()
-                                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                                .body(new LoginResponseDTO(
-                                        tokens.getAccessToken(),
-                                        user.getId(),
-                                        user.getUsername(),
-                                        user.getName(),
-                                        "로그인 성공!"));
-                    })
-                    .orElse(ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body(new LoginResponseDTO(null, null, null, null, "로그인 실패")));
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                    .body(new LoginResponseDTO(
+                            tokens.getAccessToken(),
+                            user.getId(),
+                            user.getUsername(),
+                            user.getName(),
+                            "로그인 성공!"));
         } catch (Exception e) {
             log.error("Login error: ", e); // 상세 로그 추가
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
