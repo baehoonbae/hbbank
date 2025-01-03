@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hbbank.backend.dto.LoginRequestDTO;
 import com.hbbank.backend.dto.OAuth2AdditionalInfoDTO;
-import com.hbbank.backend.exception.DuplicateUserException;
-import com.hbbank.backend.exception.InvalidPasswordException;
+import com.hbbank.backend.exception.user.DuplicateUserException;
+import com.hbbank.backend.exception.user.InvalidUserPasswordException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.UserRegistDTO;
-import com.hbbank.backend.exception.UserNotFoundException;
+import com.hbbank.backend.exception.user.UserNotFoundException;
 import com.hbbank.backend.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -225,7 +225,7 @@ class UserServiceTest {
                 .thenReturn(false);
 
         //when & then
-        assertThrows(InvalidPasswordException.class, () -> userService.login(dto2));
+        assertThrows(InvalidUserPasswordException.class, () -> userService.login(dto2));
         verify(encoder).matches(anyString(), anyString());
     }
 

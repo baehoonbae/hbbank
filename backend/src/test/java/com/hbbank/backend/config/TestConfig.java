@@ -47,10 +47,10 @@ public class TestConfig {
             public void sendVerificationEmail(String email) {
                 // 테스트에서는 실제 메일 발송하지 않음
             }
-            
+
             @Override
-            public boolean verifyEmail(String email, String code) {
-                return true; // 테스트에서는 항상 인증 성공
+            public void verifyEmail(String email, String code) {
+                // 테스트에서는 인증 로직을 실행하지 않음
             }
         };
     }

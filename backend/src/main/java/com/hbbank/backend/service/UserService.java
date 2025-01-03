@@ -1,11 +1,10 @@
 package com.hbbank.backend.service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
-import com.hbbank.backend.exception.DuplicateUserException;
-import com.hbbank.backend.exception.InvalidPasswordException;
+import com.hbbank.backend.exception.user.DuplicateUserException;
+import com.hbbank.backend.exception.user.InvalidUserPasswordException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,7 @@ import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.LoginRequestDTO;
 import com.hbbank.backend.dto.OAuth2AdditionalInfoDTO;
 import com.hbbank.backend.dto.UserRegistDTO;
-import com.hbbank.backend.exception.UserNotFoundException;
+import com.hbbank.backend.exception.user.UserNotFoundException;
 import com.hbbank.backend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -70,12 +69,18 @@ public class UserService {
             return user;
         } else {
             log.warn("로그인 실패 - 비밀번호 불일치 (사용자명: {})", username);
-            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
+            throw new InvalidUserPasswordException("비밀번호가 일치하지 않습니다.");
         }
     }
 
     public void completeEmailVerification(String email) {
-        userRepository.findByEmail(email).ifPresent(userRepository::save);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("사용자 조회 실패 - 사용자 EMAIL: {}", email);
+                    return new UserNotFoundException("사용자를 찾을 수 없습니다.");
+                });
+
+        userRepository.save(user);
     }
 
     public User registOAuth2User(String email, String name) {

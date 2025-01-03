@@ -10,7 +10,7 @@ import com.hbbank.backend.domain.User;
 import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.domain.enums.TransferType;
 import com.hbbank.backend.dto.TransferRequestDTO;
-import com.hbbank.backend.exception.*;
+import com.hbbank.backend.exception.account.*;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Optional;
 
 /*
@@ -37,6 +38,8 @@ class TransferServiceTest {
     private AccountRepository accountRepository;
     @Mock
     private TransactionService transactionService;
+    @Mock
+    private AccountService accountService;
     @Mock
     private PasswordEncoder encoder;
 
@@ -101,20 +104,19 @@ class TransferServiceTest {
         when(accountRepository.findByIdWithLock(fa.getId())).thenReturn(Optional.of(fa));
         when(accountRepository.findByAccountNumberWithLock(ta.getAccountNumber())).thenReturn(Optional.of(ta));
         when(encoder.matches(any(), any())).thenReturn(true);
-        doNothing().when(transactionService).createTransaction(fa, ta, amount);
         when(accountRepository.saveAndFlush(any(Account.class))).thenReturn(new Account());
+        when(transactionService.createTransaction(fa, ta, amount)).thenReturn(new ArrayList<>());
 
         //when
         // 이체 실행
         boolean result = transferService.transfer(dto1);
 
         //then
-        //결과 및 잔액 검증
-        assertTrue(result);
-        assertEquals(new BigDecimal("4000"), fa.getBalance());
-        assertEquals(new BigDecimal("2000"), ta.getBalance());
-
-        //db 호출 검증
+        assertAll(
+                () -> assertTrue(result),
+                () -> assertEquals(new BigDecimal("4000"), fa.getBalance()),
+                () -> assertEquals(new BigDecimal("2000"), ta.getBalance())
+        );
         verify(accountRepository).findById(any());
         verify(accountRepository).findByIdWithLock(any());
         verify(accountRepository).findByAccountNumberWithLock(any());
@@ -204,7 +206,7 @@ class TransferServiceTest {
         when(encoder.matches(any(), any())).thenReturn(false);
 
         //when &then
-        assertThrows(InvalidPasswordException.class, () -> transferService.transfer(dto1));
+        assertThrows(InvalidAccountPasswordException.class, () -> transferService.transfer(dto1));
         verify(accountRepository).findById(fa.getId());
         verify(accountRepository).findByIdWithLock(fa.getId());
         verify(accountRepository).findByAccountNumberWithLock(ta.getAccountNumber());

@@ -1,7 +1,6 @@
 package com.hbbank.backend.service;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.hbbank.backend.domain.User;
-import com.hbbank.backend.exception.UserNotFoundException;
+import com.hbbank.backend.exception.user.UserNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class OAuth2UserServiceTest {

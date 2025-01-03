@@ -28,14 +28,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TestDataConfig {
 
-    private final int ACCOUNT_NUMBER = 10;
+    private final Long ACCOUNT_NUMBER = 10L;
+
     private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AccountTypeRepository accountTypeRepository;
     private final TransactionRepository transactionRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+
     private final ApplicationContext applicationContext;
+    private final PasswordEncoder encoder;
 
     @Bean
     @Order(1)
@@ -43,12 +45,12 @@ public class TestDataConfig {
     public CommandLineRunner cleanupBean() {
         return args -> {
             String jdbcUrl = applicationContext.getEnvironment()
-                .getProperty("spring.datasource.url");
-            
+                    .getProperty("spring.datasource.url");
+
             if (jdbcUrl == null || !jdbcUrl.contains("hbbank_test")) {
                 throw new IllegalStateException("테스트는 반드시 hbbank_test 데이터베이스에서 실행되어야 합니다. 현재 URL: " + jdbcUrl);
             }
-            try{
+            try {
                 refreshTokenRepository.deleteAll();
                 transactionRepository.deleteAll();
                 accountRepository.deleteAll();
@@ -81,7 +83,7 @@ public class TestDataConfig {
             User testUser = User.builder()
                     .name("테스트유저")
                     .email("test@test.com")
-                    .password(passwordEncoder.encode("1234"))
+                    .password(encoder.encode("1234"))
                     .phone("010-1234-5678")
                     .address("서울시 강남구 역삼동")
                     .birth(LocalDate.of(1990, 1, 1))
@@ -91,16 +93,17 @@ public class TestDataConfig {
             userRepository.save(testUser);
 
             List<Account> accounts = new ArrayList<>();
-            for (int i = 1; i <= ACCOUNT_NUMBER; i++) {
+            for (long i = 1; i <= ACCOUNT_NUMBER; i++) {
                 String accountNumber = String.format("%015d", i);
                 accounts.add(Account.builder()
+                        .id(i)
                         .accountNumber(accountNumber)
                         .accountName("테스트계좌" + i)
                         .accountType(testAccountType) // 저장된 AccountType 사용
                         .user(testUser) // 저장된 User 사용
                         .balance(new BigDecimal("10000"))
                         .interestRate(0.0)
-                        .password(passwordEncoder.encode("1234"))
+                        .password(encoder.encode("1234"))
                         .build());
             }
 

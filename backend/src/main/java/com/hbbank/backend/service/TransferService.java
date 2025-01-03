@@ -1,6 +1,7 @@
 package com.hbbank.backend.service;
 
-import com.hbbank.backend.exception.AccountNotFoundException;
+import com.hbbank.backend.exception.account.AccountNotFoundException;
+import com.hbbank.backend.exception.account.InvalidAccountPasswordException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.enums.TransferType;
 import com.hbbank.backend.dto.TransferRequestDTO;
-import com.hbbank.backend.exception.InvalidPasswordException;
 import com.hbbank.backend.repository.AccountRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +22,7 @@ public class TransferService {
 
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
+    private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
 
     private Account fromAccount, toAccount;
@@ -90,6 +91,10 @@ public class TransferService {
         // 계좌번호 오름차순으로 락 획득
         getLock(dto, fromAccountNumber, toAccountNumber);
 
+        // 계좌 검증
+        accountService.verifyAccount(fromAccount.getId());
+        accountService.verifyAccount(toAccount.getId());
+
         // 비밀번호 검증
         checkPassword(dto);
 
@@ -135,7 +140,7 @@ public class TransferService {
     private void checkPassword(TransferRequestDTO dto) {
         if (dto.getType() == TransferType.INSTANT && !passwordEncoder.matches(dto.getPassword(), fromAccount.getPassword())) {
             log.error("이체 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
-            throw new InvalidPasswordException("계좌 비밀번호가 일치하지 않습니다");
+            throw new InvalidAccountPasswordException("계좌 비밀번호가 일치하지 않습니다");
         }
     }
 

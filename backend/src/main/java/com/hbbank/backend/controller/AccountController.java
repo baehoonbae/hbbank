@@ -1,9 +1,9 @@
 package com.hbbank.backend.controller;
 
+import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
+import com.hbbank.backend.domain.Account;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
-import com.hbbank.backend.domain.Account;
 import com.hbbank.backend.domain.AccountType;
 import com.hbbank.backend.dto.AccountCreateDTO;
 import com.hbbank.backend.dto.AccountResponseDTO;
@@ -33,53 +31,43 @@ public class AccountController {
 
     // 모든 계좌 타입 조회
     @GetMapping("/account-types")
-    public ResponseEntity<?> getAccountTypes() {
-        List<AccountType> accountTypes = accountService.getAccountTypes()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌 타입 목록을 찾을 수 없습니다."));
-        return ResponseEntity.ok(accountTypes);
+    public ResponseEntity<List<AccountType>> getAccountTypes() {
+        return ResponseEntity
+                .ok(accountService.getAccountTypes());
     }
 
     // 계좌 개설
     @PostMapping("/create")
-    public ResponseEntity<?> createAccount(@Valid @RequestBody AccountCreateDTO request) {
+    public ResponseEntity<AccountResponseDTO> createAccount(@Valid @RequestBody AccountCreateDTO request) {
         Account a = accountService.createAccount(request);
-        if (a != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(AccountResponseDTO.from(a));
-        }
-        return ResponseEntity.badRequest().body("계좌 개설 실패");
+
+        return ResponseEntity
+                .created(URI.create("/api/account/create/" + a.getId()))
+                .body(AccountResponseDTO.from(a));
     }
 
     // 특정 유저 pk 값으로 계좌 목록 조회
     @GetMapping("/accounts/{userId}")
-    public ResponseEntity<?> getAccounts(@PathVariable("userId") Long userId) {
-        List<Account> list = accountService.findAllByUser_Id(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌 목록을 찾을 수 없습니다."));
-
-        List<AccountResponseDTO> dtos = list.stream()
-                .map(AccountResponseDTO::from)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+    public ResponseEntity<List<AccountResponseDTO>> getAccounts(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(
+                        accountService.findAllByUser_Id(userId).stream()
+                                .map(AccountResponseDTO::from)
+                                .toList()
+                );
     }
 
     // 계좌 pk로 특정 계좌 조회
     @GetMapping("/{accountId}")
-    public ResponseEntity<?> getAccount(@PathVariable("accountId") Long id) {
-        Account account = accountService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다."));
-
-        AccountResponseDTO accountDTO = AccountResponseDTO.from(account);
-        return ResponseEntity.ok(accountDTO);
+    public ResponseEntity<AccountResponseDTO> getAccount(@PathVariable("accountId") Long id) {
+        return ResponseEntity
+                .ok(AccountResponseDTO.from(accountService.findById(id)));
     }
 
     // 계좌 번호로 특정 계좌 조회
     @GetMapping("/number/{accountNumber}")
-    public ResponseEntity<?> getAccount(@PathVariable("accountNumber") String accountNumber) {
-        Account account = accountService.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계좌를 찾을 수 없습니다."));
-
-        AccountResponseDTO accountDTO = AccountResponseDTO.from(account);
-        return ResponseEntity.ok(accountDTO);
+    public ResponseEntity<AccountResponseDTO> getAccount(@PathVariable("accountNumber") String accountNumber) {
+        return ResponseEntity
+                .ok(AccountResponseDTO.from(accountService.findByAccountNumber(accountNumber)));
     }
 
 }

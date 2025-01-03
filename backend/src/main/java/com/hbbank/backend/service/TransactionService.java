@@ -1,10 +1,15 @@
 package com.hbbank.backend.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.domain.enums.TransferType;
+import com.hbbank.backend.exception.transaction.InvalidDateRangeException;
 import org.springframework.stereotype.Service;
 
 import com.hbbank.backend.domain.Account;
@@ -25,13 +30,20 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountService accountService;
 
-    public void createTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
-        createWithdrawTransaction(fromAccount, toAccount, amount);
-        createDepositTransaction(fromAccount, toAccount, amount);
+    public List<Transaction> findByAccountAndTransactionType(Account account, String type) {
+        return transactionRepository.findByAccountAndTransactionType(account, type)
+                .orElse(Collections.emptyList());
+    }
+
+    public List<Transaction> createTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
+        List<Transaction> list = new ArrayList<>();
+        list.add(createWithdrawTransaction(fromAccount, toAccount, amount));
+        list.add(createDepositTransaction(fromAccount, toAccount, amount));
+        return list;
     }
 
     /* 출금 거래내역 생성 */
-    public void createWithdrawTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
+    public Transaction createWithdrawTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
         log.info("출금 거래내역 생성 - 출금계좌: {}, 입금계좌: {}, 금액: {}, 잔액: {}",
                 fromAccount.getId(), toAccount.getId(), amount, fromAccount.getBalance());
 
@@ -46,12 +58,11 @@ public class TransactionService {
                 .balance(fromAccount.getBalance())
                 .build();
 
-        transactionRepository.save(withdraw);
-        transactionRepository.flush();
+        return transactionRepository.saveAndFlush(withdraw);
     }
 
     /* 입금 거래내역 생성 */
-    public void createDepositTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
+    public Transaction createDepositTransaction(Account fromAccount, Account toAccount, BigDecimal amount) {
         log.info("입금 거래내역 생성 - 출금계좌: {}, 입금계좌: {}, 금액: {}, 잔액: {}",
                 fromAccount.getId(), toAccount.getId(), amount, toAccount.getBalance());
 
@@ -66,25 +77,36 @@ public class TransactionService {
                 .balance(toAccount.getBalance())
                 .build();
 
-        transactionRepository.save(deposit);
-        transactionRepository.flush();
+        return transactionRepository.saveAndFlush(deposit);
     }
 
     /* 계좌 ID에 따라 거래내역을 모두 가져오고 거래 일시를 기준으로 내림차순 정렬 */
-    public Optional<List<Transaction>> findAllByAccount_IdOrderByTransactionDateTimeDesc(Long accountId) throws Exception {
+    public List<Transaction> findAllByAccount_IdOrderByTransactionDateTimeDesc(Long accountId) {
         accountService.verifyAccount(accountId);
-        Optional<List<Transaction>> transactions = transactionRepository.findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId);
-        log.info("계좌 거래내역 조회 - 계좌ID: {}, 조회결과: {} 건", accountId,
-                transactions.map(List::size).orElse(0));
+
+        List<Transaction> transactions = transactionRepository
+                .findAllByAccount_IdOrderByTransactionDateTimeDesc(accountId)
+                .orElse(Collections.emptyList());
+
+        log.info("계좌 거래내역 조회 - 계좌ID: {}, 조회결과: {} 건", accountId, transactions.size());
+
         return transactions;
     }
 
     /* 거래내역을 특정 조건에 따라 조회 */
-    public Optional<List<Transaction>> findAllByCondition(TransactionSearchDTO dto) throws Exception {
-        accountService.verifyAccount(dto.getAccountId());
-        Optional<List<Transaction>> transactions = transactionRepository.findAllByCondition(dto);
-        log.info("거래내역 조건 조회 - 조회조건: {}, 조회결과: {} 건",
-                dto, transactions.map(List::size).orElse(0));
+    public List<Transaction> findAllByCondition(TransactionSearchDTO dto) {
+        if (dto.getAccountId() != null && dto.getAccountId() > 0) {
+            accountService.verifyAccount(dto.getAccountId());
+        }
+        if (LocalDate.parse(dto.getStartDate()).isAfter(LocalDate.parse(dto.getEndDate()))) {
+            throw new InvalidDateRangeException("종료일이 시작일보다 앞설 수 없습니다.");
+        }
+        List<Transaction> transactions = transactionRepository
+                .findAllByCondition(dto)
+                .orElse(Collections.emptyList());
+
+        log.info("거래내역 조건 조회 - 조회조건: {}, 조회결과: {} 건", dto, transactions.size());
+
         return transactions;
     }
 

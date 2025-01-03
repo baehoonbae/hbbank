@@ -32,34 +32,20 @@ public class TransactionController {
 
     // 특정 계좌 거래내역 전체 조회
     @GetMapping("/transactions/{accountId}")
-    public ResponseEntity<?> findAllByAccount_id(@PathVariable("accountId") Long id) {
-        try {
-            List<Transaction> t = transactionService
-                    .findAllByAccount_IdOrderByTransactionDateTimeDesc(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-
-            List<TransactionResponseDTO> dtos = t.stream()
-                    .map(TransactionResponseDTO::from)
-                    .toList();
-
-            return ResponseEntity.ok(dtos);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<List<TransactionResponseDTO>> findAllByAccount_id(@PathVariable("accountId") Long id) {
+        return ResponseEntity.ok(transactionService.findAllByAccount_IdOrderByTransactionDateTimeDesc(id).stream()
+                        .map(TransactionResponseDTO::from)
+                        .toList()
+                );
     }
 
     // 검색 조건으로 거래내역 조회
     @PostMapping("/transactions/search")
-    public ResponseEntity<?> findAllByCondition(@RequestBody TransactionSearchDTO dto) {
-        try {
-            List<Transaction> t = transactionService.findAllByCondition(dto)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래내역을 찾을 수 없습니다."));
-            List<TransactionResponseDTO> dtos = t.stream()
-                    .map(TransactionResponseDTO::from)
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<List<TransactionResponseDTO>> findAllByCondition(@RequestBody TransactionSearchDTO dto) {
+        return ResponseEntity.ok(transactionService.findAllByCondition(dto).stream()
+                        .map(TransactionResponseDTO::from)
+                        .toList()
+                );
+
     }
 }

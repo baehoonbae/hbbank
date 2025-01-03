@@ -9,7 +9,8 @@ export const useTransactions = () => {
 
     const searchTransactions = async () => {
         try {
-            const response = await http.post('/transaction/transactions/search', searchParams, {
+            const updatedParams = { ...searchParams, userId: user.id };
+            const response = await http.post('/transaction/transactions/search', updatedParams, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem('accessToken')}`
                 }

@@ -30,7 +30,7 @@ export const transactionSearchState = atom<TransactionSearchDTO>({
     key: 'transactionSearchState',
     default: {
         userId: 0,
-        accountId: null,
+        accountId: 0,
         startDate: null,
         endDate: null,
         transactionType: 0,

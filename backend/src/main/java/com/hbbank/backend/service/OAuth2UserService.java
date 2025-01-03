@@ -2,7 +2,7 @@ package com.hbbank.backend.service;
 
 import java.util.Collections;
 
-import com.hbbank.backend.exception.UserNotFoundException;
+import com.hbbank.backend.exception.user.UserNotFoundException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

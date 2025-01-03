@@ -5,6 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.domain.User;
+import com.hbbank.backend.exception.account.AccountNotFoundException;
+import com.hbbank.backend.exception.autoTransfer.AutoTransferNotFoundException;
+import com.hbbank.backend.exception.autoTransfer.InvalidAutoTransferPasswordException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +34,7 @@ public class AutoTransferService {
 
     private final AccountRepository accountRepository;
     private final AutoTransferRepository autoTransferRepository;
+    private final UserService userService;
     private final TransferService transferService;
     private final PasswordEncoder encoder;
 
@@ -40,7 +45,7 @@ public class AutoTransferService {
                 dto.getTransferDay(), dto.getStartDate(), dto.getEndDate());
 
         dto.validate();
-        
+
         Account fa = accountRepository.findById(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("자동이체 등록 실패 - 출금계좌 없음 (계좌ID: {})", dto.getFromAccountId());
@@ -57,64 +62,70 @@ public class AutoTransferService {
 
         AutoTransfer sat = autoTransferRepository.save(at);
         log.info("자동이체 등록 완료 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
-                sat.getId(), 
-                dto.getFromAccountId(), 
+                sat.getId(),
+                dto.getFromAccountId(),
                 dto.getToAccountNumber(),
-                dto.getAmount(), 
+                dto.getAmount(),
                 dto.getTransferDay());
 
         return sat;
     }
 
     // 자동 이체 조회
-    public Optional<AutoTransfer> findById(Long autoTransferId) {
-        return autoTransferRepository.findById(autoTransferId);
+    public AutoTransfer findById(Long autoTransferId) {
+        return autoTransferRepository.findById(autoTransferId)
+                .orElseThrow(() -> {
+                    log.error("자동이체 조회 실패 - 존재하지 않는 자동이체 (계좌ID: {})", autoTransferId);
+                    return new AutoTransferNotFoundException("존재하지 않는 자동이체입니다.");
+                });
     }
 
     // 자동 이체 목록 조회
-    public Optional<List<AutoTransfer>> findAllByUserId(Long userId) {
-        return autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
+    public List<AutoTransfer> findAllByUserId(Long userId) {
+        userService.findById(userId);
+
+        return autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE)
+                .orElse(Collections.emptyList());
     }
 
     // 자동 이체 수정
-    public Optional<AutoTransfer> update(Long id, AutoTransferRequestDTO dto) {
+    public AutoTransfer update(Long id, AutoTransferRequestDTO dto) {
         log.info("자동이체 수정 시작 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
                 id, dto.getFromAccountId(), dto.getToAccountNumber(), dto.getAmount(), dto.getTransferDay());
 
         AutoTransfer autoTransfer = autoTransferRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("자동이체 수정 실패 - 자동이체 없음 (ID: {})", id);
-                    return new IllegalArgumentException("해당 자동이체를 찾을 수 없습니다.");
+                    return new AutoTransferNotFoundException("해당 자동이체를 찾을 수 없습니다.");
                 });
 
         Account fromAccount = accountRepository.findByIdWithUser(dto.getFromAccountId())
                 .orElseThrow(() -> {
                     log.error("자동이체 수정 실패 - 출금계좌 없음 (계좌ID: {})", dto.getFromAccountId());
-                    return new IllegalArgumentException("출금 계좌를 찾을 수 없습니다.");
+                    return new AccountNotFoundException("출금 계좌를 찾을 수 없습니다.");
                 });
 
         if (!encoder.matches(dto.getPassword(), fromAccount.getPassword())) {
             log.error("자동이체 수정 실패 - 비밀번호 불일치 (출금계좌: {})", dto.getFromAccountId());
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new InvalidAutoTransferPasswordException("비밀번호가 일치하지 않습니다.");
         }
 
         autoTransfer.update(fromAccount, dto);
         AutoTransfer updated = autoTransferRepository.save(autoTransfer);
 
         log.info("자동이체 수정 완료 - ID: {}, 출금계좌: {}, 입금계좌: {}, 금액: {}, 이체일: {}",
-                updated.getId(), 
-                updated.getFromAccount().getId(), 
+                updated.getId(),
+                updated.getFromAccount().getId(),
                 updated.getToAccountNumber(),
-                updated.getAmount(), 
+                updated.getAmount(),
                 updated.getTransferDay());
 
-        return Optional.of(updated);
+        return updated;
     }
 
     // 자동 이체 삭제
     public void delete(AutoTransfer at) {
-        log.info("자동이체 삭제 - ID: {}, 출금계좌: {}, 입금계좌: {}",
-                at.getId(), at.getFromAccount().getId(), at.getToAccountNumber());
+        log.info("자동이체 삭제 - ID: {}, 출금계좌: {}, 입금계좌: {}", at.getId(), at.getFromAccount().getId(), at.getToAccountNumber());
         autoTransferRepository.delete(at);
         log.info("자동이체 삭제 완료 - ID: {}", at.getId());
     }
@@ -171,8 +182,9 @@ public class AutoTransferService {
         LocalDate today = LocalDate.now();
         log.info("자동이체 만료 시작: {}", today);
 
-        List<AutoTransfer> list = autoTransferRepository.findAllByEndDateAndStatus(today, TransferStatus.ACTIVE)
-                .orElseThrow(() -> new IllegalArgumentException("리스트를 찾을 수 없습니다."));
+        List<AutoTransfer> list = autoTransferRepository
+                .findAllByEndDateAndStatus(today, TransferStatus.ACTIVE)
+                .orElse(Collections.emptyList());
 
         int expiredCount = 0;
 
@@ -183,11 +195,9 @@ public class AutoTransferService {
                     autoTransferRepository.save(at);
                     expiredCount++;
 
-                    log.info("자동이체 만료 처리 완료 - ID: {}, 출금계좌: {}",
-                            at.getId(), at.getFromAccount().getId());
+                    log.info("자동이체 만료 처리 완료 - ID: {}, 출금계좌: {}", at.getId(), at.getFromAccount().getId());
                 } catch (Exception e) {
-                    log.error("자동이체 만료 처리 실패 - ID: {}, 사유: {}",
-                            at.getId(), e.getMessage());
+                    log.error("자동이체 만료 처리 실패 - ID: {}, 사유: {}", at.getId(), e.getMessage());
                 }
             }
         } finally {

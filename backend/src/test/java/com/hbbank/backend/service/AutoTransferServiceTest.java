@@ -7,21 +7,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.hbbank.backend.exception.account.AccountNotFoundException;
+import com.hbbank.backend.exception.autoTransfer.AutoTransferNotFoundException;
+import com.hbbank.backend.exception.autoTransfer.InvalidAutoTransferPasswordException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -31,7 +34,7 @@ import com.hbbank.backend.domain.User;
 import com.hbbank.backend.domain.enums.TransferStatus;
 import com.hbbank.backend.dto.AutoTransferRequestDTO;
 import com.hbbank.backend.dto.TransferRequestDTO;
-import com.hbbank.backend.exception.OutofBalanceException;
+import com.hbbank.backend.exception.account.OutofBalanceException;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.AutoTransferRepository;
 
@@ -43,6 +46,8 @@ class AutoTransferServiceTest {
     private AccountRepository accountRepository;
     @Mock
     private AutoTransferRepository autoTransferRepository;
+    @Mock
+    private UserService userService;
     @Mock
     private TransferService transferService;
     @Mock
@@ -307,7 +312,7 @@ class AutoTransferServiceTest {
         when(autoTransferRepository.findAllByNextTransferDateLessThanEqualAndStatus(
                 any(LocalDate.class), eq(TransferStatus.ACTIVE)))
                 .thenReturn(Optional.of(List.of(autoTransfer)));
-        
+
         when(transferService.transfer(any(TransferRequestDTO.class))).thenReturn(true);
 
         // when
@@ -551,13 +556,20 @@ class AutoTransferServiceTest {
         when(autoTransferRepository.findById(autoTransferId)).thenReturn(Optional.of(existingAutoTransfer));
         when(accountRepository.findByIdWithUser(1L)).thenReturn(Optional.of(account));
         when(encoder.matches("1234", "encodedPassword")).thenReturn(true);
-        when(autoTransferRepository.save(any(AutoTransfer.class))).thenReturn(existingAutoTransfer);
+        when(autoTransferRepository.save(any(AutoTransfer.class))).thenAnswer(i -> i.getArgument(0));
 
         // when
-        Optional<AutoTransfer> result = autoTransferService.update(autoTransferId, dto);
+        AutoTransfer result = autoTransferService.update(autoTransferId, dto);
 
         // then
-        assertTrue(result.isPresent());
+        assertAll(
+                () -> assertEquals(dto.getFromAccountId(), result.getFromAccount().getId()),
+                () -> assertEquals(dto.getToAccountNumber(), result.getToAccountNumber()),
+                () -> assertEquals(dto.getAmount(), result.getAmount()),
+                () -> assertEquals(dto.getTransferDay(), result.getTransferDay()),
+                () -> assertEquals(dto.getStartDate(), result.getStartDate()),
+                () -> assertEquals(dto.getEndDate(), result.getEndDate())
+        );
         verify(autoTransferRepository).findById(autoTransferId);
         verify(accountRepository).findByIdWithUser(1L);
         verify(encoder).matches("1234", "encodedPassword");
@@ -578,11 +590,10 @@ class AutoTransferServiceTest {
                 .endDate(LocalDate.now().plusMonths(12))
                 .password("1234")
                 .build();
-
         when(autoTransferRepository.findById(autoTransferId)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> autoTransferService.update(autoTransferId, dto));
+        assertThrows(AutoTransferNotFoundException.class, () -> autoTransferService.update(autoTransferId, dto));
         verify(autoTransferRepository).findById(autoTransferId);
         verifyNoInteractions(accountRepository, encoder);
     }
@@ -611,7 +622,7 @@ class AutoTransferServiceTest {
         when(accountRepository.findByIdWithUser(1L)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> autoTransferService.update(autoTransferId, dto));
+        assertThrows(AccountNotFoundException.class, () -> autoTransferService.update(autoTransferId, dto));
         verify(autoTransferRepository).findById(autoTransferId);
         verify(accountRepository).findByIdWithUser(1L);
         verifyNoInteractions(encoder);
@@ -648,7 +659,7 @@ class AutoTransferServiceTest {
         when(encoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> autoTransferService.update(autoTransferId, dto));
+        assertThrows(InvalidAutoTransferPasswordException.class, () -> autoTransferService.update(autoTransferId, dto));
         verify(autoTransferRepository).findById(autoTransferId);
         verify(accountRepository).findByIdWithUser(1L);
         verify(encoder).matches("wrongPassword", "encodedPassword");
@@ -670,11 +681,10 @@ class AutoTransferServiceTest {
                 .thenReturn(Optional.of(expectedAutoTransfer));
 
         // when
-        Optional<AutoTransfer> result = autoTransferService.findById(autoTransferId);
+        AutoTransfer result = autoTransferService.findById(autoTransferId);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(autoTransferId, result.get().getId());
+        assertEquals(autoTransferId, result.getId());
         verify(autoTransferRepository).findById(autoTransferId);
     }
 
@@ -683,15 +693,12 @@ class AutoTransferServiceTest {
     void findById_NotFound() {
         // given
         Long autoTransferId = 999L;
-        when(autoTransferRepository.findById(autoTransferId))
+        when(autoTransferRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
-        // when
-        Optional<AutoTransfer> result = autoTransferService.findById(autoTransferId);
-
-        // then
-        assertTrue(result.isEmpty());
-        verify(autoTransferRepository).findById(autoTransferId);
+        // when &then
+        assertThrows(AutoTransferNotFoundException.class, () -> autoTransferService.findById(autoTransferId));
+        verify(autoTransferRepository).findById(anyLong());
     }
 
     @Test
@@ -713,16 +720,21 @@ class AutoTransferServiceTest {
                         .amount(new BigDecimal("20000"))
                         .build()
         );
-
+        when(userService.findById(anyLong()))
+                .thenReturn(new User());
         when(autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE))
                 .thenReturn(Optional.of(expectedList));
 
         // when
-        Optional<List<AutoTransfer>> result = autoTransferService.findAllByUserId(userId);
+        List<AutoTransfer> result = autoTransferService.findAllByUserId(userId);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(2, result.get().size());
+        assertEquals(2, result.size());
+        for (int i = 0; i < result.size(); i++) {
+            assertNotNull(result.get(i));
+            assertEquals(expectedList.get(i), result.get(i));
+        }
+        verify(userService).findById(anyLong());
         verify(autoTransferRepository).findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }
 
@@ -731,14 +743,17 @@ class AutoTransferServiceTest {
     void findAllByUserId_Empty() {
         // given
         Long userId = 1L;
+        when(userService.findById(anyLong()))
+                .thenReturn(new User());
         when(autoTransferRepository.findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE))
                 .thenReturn(Optional.empty());
 
         // when
-        Optional<List<AutoTransfer>> result = autoTransferService.findAllByUserId(userId);
+        List<AutoTransfer> result = autoTransferService.findAllByUserId(userId);
 
         // then
         assertTrue(result.isEmpty());
+        verify(userService).findById(anyLong());
         verify(autoTransferRepository).findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }
 
