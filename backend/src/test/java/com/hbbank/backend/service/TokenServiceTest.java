@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.hbbank.backend.domain.RefreshToken;
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.dto.TokenResponseDTO;
-import com.hbbank.backend.exception.InvalidTokenException;
+import com.hbbank.backend.exception.token.InvalidTokenException;
 import com.hbbank.backend.repository.RefreshTokenRepository;
 import com.hbbank.backend.util.JwtUtil;
 

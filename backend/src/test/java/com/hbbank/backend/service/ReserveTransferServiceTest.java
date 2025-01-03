@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.hbbank.backend.exception.account.AccountNotFoundException;
+import com.hbbank.backend.exception.reserveTransfer.InvalidReserveTransferPasswordException;
+import com.hbbank.backend.exception.reserveTransfer.ReserveTransferNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -113,7 +116,7 @@ class ReserveTransferServiceTest {
         when(accountRepository.findByIdWithUser(1L)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> reserveTransferService.register(dto));
+        assertThrows(AccountNotFoundException.class, () -> reserveTransferService.register(dto));
         verify(accountRepository).findByIdWithUser(1L);
         verifyNoInteractions(encoder, reserveTransferRepository);
     }
@@ -143,7 +146,7 @@ class ReserveTransferServiceTest {
         when(encoder.matches("wrongPassword", "encodedPassword")).thenReturn(false);
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> reserveTransferService.register(dto));
+        assertThrows(InvalidReserveTransferPasswordException.class, () -> reserveTransferService.register(dto));
         verify(accountRepository).findByIdWithUser(1L);
         verify(encoder).matches("wrongPassword", "encodedPassword");
         verifyNoInteractions(reserveTransferRepository);
@@ -207,14 +210,15 @@ class ReserveTransferServiceTest {
         when(reserveTransferRepository.save(any(ReserveTransfer.class))).thenReturn(existingTransfer);
 
         // when
-        Optional<ReserveTransfer> result = reserveTransferService.update(id, dto);
+        ReserveTransfer result = reserveTransferService.update(id, dto);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(dto.getAmount(), result.get().getAmount());
-        assertEquals(dto.getDescription(), result.get().getDescription());
-        assertEquals(dto.getReservedAt(), result.get().getReservedAt());
-
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(dto.getAmount(), result.getAmount()),
+                () -> assertEquals(dto.getDescription(), result.getDescription()),
+                () -> assertEquals(dto.getReservedAt(), result.getReservedAt())
+        );
         verify(reserveTransferRepository).findById(id);
         verify(accountRepository).findByIdWithUser(1L);
         verify(encoder).matches(dto.getPassword(), fromAccount.getPassword());
@@ -239,7 +243,7 @@ class ReserveTransferServiceTest {
         when(reserveTransferRepository.findById(id)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> reserveTransferService.update(id, dto));
+        assertThrows(ReserveTransferNotFoundException.class, () -> reserveTransferService.update(id, dto));
         verify(reserveTransferRepository).findById(id);
         verifyNoInteractions(accountRepository, encoder);
     }
@@ -279,7 +283,7 @@ class ReserveTransferServiceTest {
         when(encoder.matches(dto.getPassword(), fromAccount.getPassword())).thenReturn(false);
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> reserveTransferService.update(id, dto));
+        assertThrows(InvalidReserveTransferPasswordException.class, () -> reserveTransferService.update(id, dto));
         verify(reserveTransferRepository).findById(id);
         verify(accountRepository).findByIdWithUser(1L);
         verify(encoder).matches(dto.getPassword(), fromAccount.getPassword());
@@ -310,16 +314,19 @@ class ReserveTransferServiceTest {
         when(reserveTransferRepository.findById(id)).thenReturn(Optional.of(transfer));
 
         // when
-        Optional<ReserveTransfer> result = reserveTransferService.findById(id);
+        ReserveTransfer result = reserveTransferService.findById(id);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(id, result.get().getId());
-        assertEquals(account.getId(), result.get().getFromAccount().getId());
-        assertEquals("123456789012345", result.get().getToAccountNumber());
-        assertEquals(new BigDecimal("10000"), result.get().getAmount());
-        assertEquals("테스트 이체", result.get().getDescription());
-        assertEquals(TransferStatus.ACTIVE, result.get().getStatus());
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(id, result.getId()),
+                () -> assertEquals(account.getId(), result.getFromAccount().getId()),
+                () -> assertEquals("123456789012345", result.getToAccountNumber()),
+                () -> assertEquals(new BigDecimal("10000"), result.getAmount()),
+                () -> assertEquals("테스트 이체", result.getDescription()),
+                () -> assertEquals(TransferStatus.ACTIVE, result.getStatus())
+        );
+
 
         verify(reserveTransferRepository).findById(id);
     }
@@ -361,15 +368,18 @@ class ReserveTransferServiceTest {
                 .thenReturn(Optional.of(transfers));
 
         // when
-        Optional<List<ReserveTransfer>> result = reserveTransferService.findAllByUserId(userId);
+        List<ReserveTransfer> result = reserveTransferService.findAllByUserId(userId);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(2, result.get().size());
-        assertEquals("첫번째 이체", result.get().get(0).getDescription());
-        assertEquals("두번째 이체", result.get().get(1).getDescription());
-        assertEquals(new BigDecimal("10000"), result.get().get(0).getAmount());
-        assertEquals(new BigDecimal("20000"), result.get().get(1).getAmount());
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(2, result.size()),
+                () -> assertEquals("첫번째 이체", result.get(0).getDescription()),
+                () -> assertEquals("두번째 이체", result.get(1).getDescription()),
+                () -> assertEquals(new BigDecimal("10000"), result.get(0).getAmount()),
+                () -> assertEquals(new BigDecimal("20000"), result.get(1).getAmount())
+        );
+
 
         verify(reserveTransferRepository).findAllByUserIdAndStatus(userId, TransferStatus.ACTIVE);
     }

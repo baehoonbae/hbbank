@@ -3,23 +3,27 @@ package com.hbbank.backend.service;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.hbbank.backend.exception.email.InvalidVerificationCodeException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -78,8 +82,8 @@ class EmailServiceTest {
         doThrow(new RuntimeException("메일 발송 실패")).when(mailSender).send(any(SimpleMailMessage.class));
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, 
-            () -> emailService.sendVerificationEmail(email));
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> emailService.sendVerificationEmail(email));
         assertEquals("메일 발송 실패", exception.getMessage());
         verify(redisTemplate).opsForValue();
         verify(valueOperations).set(eq("EMAIL:" + email), anyString(), eq(5L), eq(TimeUnit.MINUTES));
@@ -88,7 +92,7 @@ class EmailServiceTest {
 
     /**
      * 이메일 인증 성공 테스트
-     * 1. Redis에서 저장된 인증코드 조회를 
+     * 1. Redis에서 저장된 인증코드 조회를
      * 2. 입력된 코드와 저장된 코드 일치 확인
      * 3. 인증 성공 후 Redis에서 인증코드 삭제
      */
@@ -102,11 +106,8 @@ class EmailServiceTest {
         when(valueOperations.get("EMAIL:" + email)).thenReturn(code);
         when(redisTemplate.delete("EMAIL:" + email)).thenReturn(true);
 
-        // when
-        boolean result = emailService.verifyEmail(email, code);
-
-        // then
-        assertTrue(result);
+        // when & then
+        assertDoesNotThrow(() -> emailService.verifyEmail(email, code));
         verify(redisTemplate).opsForValue();
         verify(valueOperations).get("EMAIL:" + email);
         verify(redisTemplate).delete("EMAIL:" + email);
@@ -127,11 +128,8 @@ class EmailServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("EMAIL:" + email)).thenReturn(code);
 
-        // when
-        boolean result = emailService.verifyEmail(email, wrongCode);
-
-        // then
-        assertFalse(result);
+        // when & then
+        assertThrows(InvalidVerificationCodeException.class, () -> emailService.verifyEmail(email, wrongCode));
         verify(redisTemplate).opsForValue();
         verify(valueOperations).get("EMAIL:" + email);
         verify(redisTemplate, never()).delete(anyString());
@@ -151,11 +149,8 @@ class EmailServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("EMAIL:" + email)).thenReturn(null);
 
-        // when
-        boolean result = emailService.verifyEmail(email, code);
-
-        // then
-        assertFalse(result);
+        // when & then
+        assertThrows(InvalidVerificationCodeException.class, () -> emailService.verifyEmail(email, code));
         verify(redisTemplate).opsForValue();
         verify(valueOperations).get("EMAIL:" + email);
         verify(redisTemplate, never()).delete(anyString());

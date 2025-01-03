@@ -1,5 +1,6 @@
 package com.hbbank.backend.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,47 +34,37 @@ public class ReserveTransferController {
     private final ReserveTransferService reserveTransferService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody ReserveTransferRequestDTO dto) {
+    public ResponseEntity<ReserveTransferResponseDTO> register(@Valid @RequestBody ReserveTransferRequestDTO dto) {
         ReserveTransfer rt = reserveTransferService.register(dto);
-        if (rt != null) {
-            return ResponseEntity.ok(ReserveTransferResponseDTO.from(rt));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("예약 이체 등록 실패");
+        return ResponseEntity
+                .created(URI.create("/api/reserve-transfer/register/" + rt.getId()))
+                .body(ReserveTransferResponseDTO.from(rt));
     }
 
     @GetMapping("/{reserveTransferId}")
-    public ResponseEntity<?> findById(@PathVariable("reserveTransferId") Long id) {
-        ReserveTransfer rt = reserveTransferService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 예약 이체입니다."));
-
-        return ResponseEntity.ok(ReserveTransferResponseDTO.from(rt));
+    public ResponseEntity<ReserveTransferResponseDTO> findById(@PathVariable("reserveTransferId") Long id) {
+        return ResponseEntity
+                .ok(ReserveTransferResponseDTO.from(reserveTransferService.findById(id)));
     }
 
     @GetMapping("/list/{userId}")
-    public ResponseEntity<?> findAllByUserId(@PathVariable("userId") Long userId) {
-        List<ReserveTransfer> list = reserveTransferService.findAllByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "예약 이체 목록을 찾지 못했습니다."));
-
-        return ResponseEntity.ok(
-                list.stream()
-                        .map(rt -> ReserveTransferResponseDTO.from(rt))
-                        .collect(Collectors.toList())
-        );
+    public ResponseEntity<List<ReserveTransferResponseDTO>> findAllByUserId(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(reserveTransferService.findAllByUserId(userId).stream()
+                        .map(ReserveTransferResponseDTO::from)
+                        .toList()
+                );
     }
 
     @PutMapping("/{reserveTransferId}")
-    public ResponseEntity<?> updateReserveTransfer(@PathVariable("reserveTransferId") Long id, @Valid @RequestBody ReserveTransferRequestDTO dto) {
-        ReserveTransfer urt = reserveTransferService.update(id, dto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "예약 이체 수정에 실패했습니다."));
-
-        return ResponseEntity.ok(ReserveTransferResponseDTO.from(urt));
+    public ResponseEntity<ReserveTransferResponseDTO> updateReserveTransfer(@PathVariable("reserveTransferId") Long id, @Valid @RequestBody ReserveTransferRequestDTO dto) {
+        return ResponseEntity
+                .ok(ReserveTransferResponseDTO.from(reserveTransferService.update(id, dto)));
     }
 
     @DeleteMapping("/{reserveTransferId}")
-    public ResponseEntity<?> deleteReserveTransfer(@PathVariable("reserveTransferId") Long id) {
-        ReserveTransfer rt = reserveTransferService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 예약 이체입니다."));
-        reserveTransferService.delete(rt);
-        return ResponseEntity.ok("예약이체가 성공적으로 삭제되었습니다.");
+    public ResponseEntity<String> deleteReserveTransfer(@PathVariable("reserveTransferId") Long id) {
+        reserveTransferService.delete(reserveTransferService.findById(id));
+        return ResponseEntity
+                .ok("예약이체가 성공적으로 삭제되었습니다.");
     }
 }

@@ -1,10 +1,10 @@
 package com.hbbank.backend.service;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import com.hbbank.backend.exception.AccountNotFoundException;
-import com.hbbank.backend.exception.UserNotFoundException;
+import com.hbbank.backend.exception.account.AccountNotFoundException;
+import com.hbbank.backend.exception.account.AccountTypeNotFoundException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,9 @@ import com.hbbank.backend.domain.AccountType;
 import com.hbbank.backend.domain.User;
 import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.dto.AccountCreateDTO;
-import com.hbbank.backend.exception.InvalidAccountStatusException;
+import com.hbbank.backend.exception.account.InvalidAccountStatusException;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.AccountTypeRepository;
-import com.hbbank.backend.repository.UserRepository;
 import com.hbbank.backend.util.AccountNumberGenerator;
 
 import jakarta.transaction.Transactional;
@@ -36,8 +35,8 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final AccountNumberGenerator numGen;
 
-    public Optional<List<AccountType>> getAccountTypes() {
-        return Optional.of(accountTypeRepository.findAll());
+    public List<AccountType> getAccountTypes() {
+        return accountTypeRepository.findAll();
     }
 
     public Account createAccount(AccountCreateDTO dto) {
@@ -47,7 +46,7 @@ public class AccountService {
         AccountType accountType = accountTypeRepository.findById(dto.getAccountTypeCode())
                 .orElseThrow(() -> {
                     log.error("계좌 생성 실패 - 계좌유형 없음 (계좌유형코드: {})", dto.getAccountTypeCode());
-                    return new RuntimeException("계좌 유형을 찾을 수 없습니다.");
+                    return new AccountTypeNotFoundException("계좌 유형을 찾을 수 없습니다.");
                 });
 
         String accountNumber = numGen.generate(dto.getAccountTypeCode());
@@ -65,21 +64,32 @@ public class AccountService {
         log.info("계좌 생성 완료 - 계좌번호: {}, 계좌유형: {}, 사용자ID: {}",
                 savedAccount.getAccountNumber(),
                 savedAccount.getAccountType().getCode(),
-                savedAccount.getUser().getId());
-
+                savedAccount.getUser().getId()
+        );
         return savedAccount;
     }
 
-    public Optional<List<Account>> findAllByUser_Id(Long userId) {
-        return accountRepository.findAllByUser_IdWithUser(userId);
+    public List<Account> findAllByUser_Id(Long userId) {
+        userService.findById(userId);
+
+        return accountRepository.findAllByUser_IdWithUser(userId)
+                .orElse(Collections.emptyList());
     }
 
-    public Optional<Account> findById(Long id) {
-        return accountRepository.findByIdWithUser(id);
+    public Account findById(Long id) {
+        return accountRepository.findByIdWithUser(id)
+                .orElseThrow(() -> {
+                    log.error("계좌 ID로 조회 실패 - 존재하지 않는 계좌 (계좌 ID: {})", id);
+                    return new AccountNotFoundException("존재하지 않는 계좌입니다.");
+                });
     }
 
-    public Optional<Account> findByAccountNumber(String accountNumber) {
-        return accountRepository.findByAccountNumberWithUser(accountNumber);
+    public Account findByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumberWithUser(accountNumber)
+                .orElseThrow(() -> {
+                    log.error("계좌 번호로 조회 실패 - 존재하지 않는 계좌 (계좌 번호: {})", accountNumber);
+                    return new AccountNotFoundException("존재하지 않는 계좌입니다.");
+                });
     }
 
     @Scheduled(cron = "0 0 0 * * *")
@@ -90,13 +100,12 @@ public class AccountService {
     }
 
     public void verifyAccount(Long accountId) {
-        Account a = findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("존재하지 않는 계좌입니다."));
+        Account a = findById(accountId);
 
         userService.findById(a.getUser().getId());
 
         if (!a.getStatus().equals(AccountStatus.ACTIVE)) {
-            throw new InvalidAccountStatusException("");
+            throw new InvalidAccountStatusException("유효하지 않은 계좌 상태입니다.");
         }
     }
 }

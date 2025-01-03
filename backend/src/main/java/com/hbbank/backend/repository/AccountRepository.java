@@ -17,28 +17,28 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    public Optional<Account> findByAccountNumber(@Param("accountNumber") String accountNumber);
+    Optional<Account> findByAccountNumber(@Param("accountNumber") String accountNumber);
 
     @Query("select a from Account a join fetch a.user where a.id=:id")
-    public Optional<Account> findByIdWithUser(@Param("id") Long id);
+    Optional<Account> findByIdWithUser(@Param("id") Long id);
 
     @Query("select a from Account a join fetch a.user where a.user.id=:userId")
-    public Optional<List<Account>> findAllByUser_IdWithUser(@Param("userId") Long userId);
+    Optional<List<Account>> findAllByUser_IdWithUser(@Param("userId") Long userId);
 
     @Query("select a from Account a join fetch a.user where a.accountNumber=:accountNumber")
-    public Optional<Account> findByAccountNumberWithUser(@Param("accountNumber") String accountNumber);
+    Optional<Account> findByAccountNumberWithUser(@Param("accountNumber") String accountNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     // @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")})
     @Query("select a from Account a join fetch a.user where a.id=:id")
-    public Optional<Account> findByIdWithLock(@Param("id") Long id);
+    Optional<Account> findByIdWithLock(@Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     // @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")})
     @Query("select a from Account a join fetch a.user where a.accountNumber=:accountNumber")
-    public Optional<Account> findByAccountNumberWithLock(@Param("accountNumber") String accountNumber);
+    Optional<Account> findByAccountNumberWithLock(@Param("accountNumber") String accountNumber);
 
     @Query("update Account a set a.dailyTransferredAmount = 0")
     @Modifying
-    public void resetAllDailyTransferredAmounts();
+    void resetAllDailyTransferredAmounts();
 }

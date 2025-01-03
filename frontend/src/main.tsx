@@ -9,7 +9,6 @@ if (import.meta.env.DEV) {
   if (import.meta.hot) {
     import.meta.hot.accept(() => {
       sessionStorage.clear()
-      console.log('세션스토리지 초기화됨!')
     })
   }
 }

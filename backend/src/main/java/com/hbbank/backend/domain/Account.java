@@ -5,10 +5,10 @@ import java.math.BigDecimal;
 import org.hibernate.annotations.ColumnDefault;
 
 import com.hbbank.backend.domain.enums.AccountStatus;
-import com.hbbank.backend.exception.DailyTransferLimitExceededException;
-import com.hbbank.backend.exception.InvalidAccountStatusException;
-import com.hbbank.backend.exception.OutofBalanceException;
-import com.hbbank.backend.exception.TransferLimitExceededException;
+import com.hbbank.backend.exception.account.DailyTransferLimitExceededException;
+import com.hbbank.backend.exception.account.InvalidAccountStatusException;
+import com.hbbank.backend.exception.account.OutofBalanceException;
+import com.hbbank.backend.exception.account.TransferLimitExceededException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

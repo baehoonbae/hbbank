@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hbbank.backend.exception.InvalidTokenException;
+import com.hbbank.backend.exception.token.InvalidTokenException;
 import com.hbbank.backend.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;

@@ -14,7 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.hbbank.backend.exception.*;
+import com.hbbank.backend.exception.account.*;
+import com.hbbank.backend.exception.user.UserNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +31,6 @@ import com.hbbank.backend.domain.enums.AccountStatus;
 import com.hbbank.backend.dto.AccountCreateDTO;
 import com.hbbank.backend.repository.AccountRepository;
 import com.hbbank.backend.repository.AccountTypeRepository;
-import com.hbbank.backend.repository.UserRepository;
 import com.hbbank.backend.util.AccountNumberGenerator;
 
 // AccountService 단위 테스트
@@ -168,11 +168,10 @@ class AccountServiceTest {
         when(accountTypeRepository.findAll()).thenReturn(expectedTypes);
 
         // when
-        Optional<List<AccountType>> result = accountService.getAccountTypes();
+        List<AccountType> result = accountService.getAccountTypes();
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(2, result.get().size());
+        assertEquals(2, result.size());
         verify(accountTypeRepository).findAll();
     }
 
@@ -188,11 +187,10 @@ class AccountServiceTest {
                 .thenReturn(Optional.of(expectedAccount));
 
         // when
-        Optional<Account> result = accountService.findByAccountNumber(accountNumber);
+        Account result = accountService.findByAccountNumber(accountNumber);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(accountNumber, result.get().getAccountNumber());
+        assertEquals(accountNumber, result.getAccountNumber());
         verify(accountRepository).findByAccountNumberWithUser(accountNumber);
     }
 
@@ -209,11 +207,10 @@ class AccountServiceTest {
                 .thenReturn(Optional.of(expectedAccounts));
 
         // when
-        Optional<List<Account>> result = accountService.findAllByUser_Id(userId);
+        List<Account> result = accountService.findAllByUser_Id(userId);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(2, result.get().size());
+        assertEquals(2, result.size());
         verify(accountRepository).findAllByUser_IdWithUser(userId);
     }
 
@@ -230,11 +227,10 @@ class AccountServiceTest {
                 .thenReturn(Optional.of(expectedAccount));
 
         // when
-        Optional<Account> result = accountService.findById(accountId);
+        Account result = accountService.findById(accountId);
 
         // then
-        assertTrue(result.isPresent());
-        assertEquals(accountId, result.get().getId());
+        assertEquals(accountId, result.getId());
         verify(accountRepository).findByIdWithUser(accountId);
     }
 
@@ -246,11 +242,8 @@ class AccountServiceTest {
         when(accountRepository.findByIdWithUser(accountId))
                 .thenReturn(Optional.empty());
 
-        // when
-        Optional<Account> result = accountService.findById(accountId);
-
-        // then
-        assertTrue(result.isEmpty());
+        // when&then
+        assertThrows(AccountNotFoundException.class, () -> accountService.findById(accountId));
         verify(accountRepository).findByIdWithUser(accountId);
     }
 

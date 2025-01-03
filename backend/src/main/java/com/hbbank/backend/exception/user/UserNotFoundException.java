@@ -1,4 +1,4 @@
-package com.hbbank.backend.exception;
+package com.hbbank.backend.exception.user;
 
 public class UserNotFoundException extends RuntimeException {
 
